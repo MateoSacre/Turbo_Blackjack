@@ -83,8 +83,8 @@ class SettingsGlobalValues {
   static const Color goldColor = Color(0xffffd700);
 
   static const double globalEdgeInset = 10;
-  static const double playerCardWidth = 100;
-  static const double playerCardHeight = 150;
+  static const double playerCardWidth = 50;
+  static const double playerCardHeight = 80;
   static const double addHandButtonWidth = 100;
   static const double addHandButtonHeight = 40;
   static const SizedBox globalSizedBox = SizedBox(height: 20);

@@ -16,13 +16,16 @@ class PlayTableState extends State<PlayTable> {
     Decklogic.resetDeck();
   }
 
-  Widget _buildPosition() {
+  Widget _buildPosition(String text) {
     return Container(
-      width: 60,
-      height: 80,
+      width: SettingsGlobalValues.playerCardWidth,
+      height: SettingsGlobalValues.playerCardHeight,
       decoration: BoxDecoration(
-        color: SettingsGlobalValues.secondColor,
+        color: SettingsGlobalValues.neutralColor,
         borderRadius: BorderRadius.circular(8),
+      ),
+      child: Center(
+        child: Text(text),
       ),
     );
   }
@@ -33,7 +36,8 @@ class PlayTableState extends State<PlayTable> {
       backgroundColor: SettingsGlobalValues.mainColor,
       appBar: AppBar(
         backgroundColor: SettingsGlobalValues.mainColor,
-        iconTheme: const IconThemeData(color: SettingsGlobalValues.neutralColor),
+        iconTheme:
+            const IconThemeData(color: SettingsGlobalValues.neutralColor),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pushReplacementNamed(context, '/homePage'),
@@ -45,30 +49,38 @@ class PlayTableState extends State<PlayTable> {
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final center = Offset(constraints.maxWidth / 2, constraints.maxHeight * 0.65);
-                final radius = min(constraints.maxWidth, constraints.maxHeight) * 0.35;
+                final center = Offset(
+                    constraints.maxWidth / 2, constraints.maxHeight * .35);
+                final radius =
+                    min(constraints.maxWidth, constraints.maxHeight) * 0.40;
                 List<Widget> stackChildren = [];
+                // Player positions
+                int test = 5;
+                double offset = 0;
+                double startAngle = pi + offset;
+                double endAngle = startAngle + (pi - 2 * offset);
+                double step = (endAngle - startAngle) / (test + 1);
+                for (int i = 0; i < test; i++) {
+                  final angle = startAngle + step * (i + 1);
+                  final offsetForCard = Offset.fromDirection(angle, radius);
+                  stackChildren.add(Positioned(
+                    left: center.dx -
+                        offsetForCard.dx -
+                        SettingsGlobalValues.playerCardWidth / 2,
+                    top: center.dy -
+                        offsetForCard.dy -
+                        SettingsGlobalValues.playerCardHeight / 2,
+                    child: _buildPosition(""),
+                  ));
+                }
 
                 // Dealer position
                 stackChildren.add(Positioned(
-                  left: center.dx - 30,
-                  top: center.dy - radius - 50,
-                  child: _buildPosition(),
+                  left: center.dx - SettingsGlobalValues.playerCardWidth / 2,
+                  top: center.dy * .5 -
+                      SettingsGlobalValues.playerCardHeight / 2,
+                  child: _buildPosition("D"),
                 ));
-
-                // Player positions
-                const startAngle = 7 * pi / 6; // 210 degrees
-                const endAngle = 11 * pi / 6; // 330 degrees
-                const step = (endAngle - startAngle) / 6;
-                for (int i = 0; i < 7; i++) {
-                  final angle = startAngle + step * i;
-                  final offset = Offset.fromDirection(angle, radius);
-                  stackChildren.add(Positioned(
-                    left: center.dx + offset.dx - 30,
-                    top: center.dy + offset.dy - 40,
-                    child: _buildPosition(),
-                  ));
-                }
 
                 return Stack(children: stackChildren);
               },
