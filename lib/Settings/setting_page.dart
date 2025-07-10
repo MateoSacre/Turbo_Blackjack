@@ -49,26 +49,30 @@ class SettingsPageState extends State<SettingsPage> {
         title: const Text("Settings"),
       ),
       body: Padding(
-          padding: const EdgeInsets.all(SettingsGlobalValues.globalEdgeInset),
-          child: SingleChildScrollView(
-              child: Column(children: [
-            Wrap(
-                alignment: WrapAlignment.center,
-                children: generateSettingsWidgetList()),
-            ElevatedButton(
-              onPressed: validateSettings,
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
-                backgroundColor: SettingsGlobalValues.positiveColor,
-                disabledBackgroundColor:
-                    SettingsGlobalValues.negativeColor.withOpacity(.8),
-              ),
-              child: const Text(
-                "Validate",
-                style: TextStyle(color: SettingsGlobalValues.neutralColor),
-              ),
-            )
-          ]))),
+        padding: const EdgeInsets.all(SettingsGlobalValues.globalEdgeInset),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              Wrap(
+                  alignment: WrapAlignment.center,
+                  children: generateSettingsWidgetList()),
+              ElevatedButton(
+                onPressed: validateSettings,
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  backgroundColor: SettingsGlobalValues.positiveColor,
+                  disabledBackgroundColor:
+                      SettingsGlobalValues.negativeColor.withOpacity(.8),
+                ),
+                child: const Text(
+                  "Validate",
+                  style: TextStyle(color: SettingsGlobalValues.neutralColor),
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
     );
   }
 
