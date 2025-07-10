@@ -35,7 +35,7 @@ class SettingsPageState extends State<SettingsPage> {
     if (isReloadNeeded) {
       Decklogic.resetDeck();
     }
-    Navigator.pushReplacementNamed(context, '/playTable');
+    Navigator.pushReplacementNamed(context, '/homePage');
   }
 
   @override
@@ -63,7 +63,11 @@ class SettingsPageState extends State<SettingsPage> {
                 disabledBackgroundColor:
                     SettingsGlobalValues.negativeColor.withOpacity(.8),
               ),
-              child: const Text("Validate"),
+              child: const Text(
+                "Validate",
+                style:
+                    const TextStyle(color: SettingsGlobalValues.neutralColor),
+              ),
             )
           ]))),
     );
@@ -79,13 +83,19 @@ class SettingsPageState extends State<SettingsPage> {
     result.add(
       Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0),
-        child: Text(setting.settingName),
+        child: Text(
+          setting.settingName,
+          style: const TextStyle(color: SettingsGlobalValues.neutralColor),
+        ),
       ),
     );
     result.add(
       Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0),
-        child: Text(setting.settingName),
+        child: Text(
+          setting.settingName,
+          style: const TextStyle(color: SettingsGlobalValues.neutralColor),
+        ),
       ),
     );
     result.add(Slider(
@@ -112,7 +122,10 @@ class SettingsPageState extends State<SettingsPage> {
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child: Text(setting.settingName),
+          child: Text(
+            setting.settingName,
+            style: const TextStyle(color: SettingsGlobalValues.neutralColor),
+          ),
         ),
         Switch(
           value: setting.settingValue,
@@ -140,7 +153,10 @@ class SettingsPageState extends State<SettingsPage> {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Text(setting.settingName),
+            child: Text(
+              setting.settingName,
+              style: const TextStyle(color: SettingsGlobalValues.neutralColor),
+            ),
           ),
           Switch(
             value: setting.settingValue,

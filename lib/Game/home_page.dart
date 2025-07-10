@@ -31,7 +31,12 @@ class HomePage extends StatelessWidget {
                       minimumSize: const Size(double.infinity, 50),
                       backgroundColor: SettingsGlobalValues.positiveColor,
                     ),
-                    child: const Text('Jouer'),
+                    child: const Text(
+                      'Jouer',
+                      style: TextStyle(
+                          color: SettingsGlobalValues.neutralColor,
+                          fontWeight: FontWeight.bold),
+                    ),
                   ),
                   const SizedBox(height: 20),
                   ElevatedButton(
@@ -41,7 +46,12 @@ class HomePage extends StatelessWidget {
                       minimumSize: const Size(double.infinity, 50),
                       backgroundColor: SettingsGlobalValues.secondColor,
                     ),
-                    child: const Text('Reglages'),
+                    child: const Text(
+                      'Reglages',
+                      style: TextStyle(
+                          color: SettingsGlobalValues.neutralColor,
+                          fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ],
               ),

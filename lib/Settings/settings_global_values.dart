@@ -75,7 +75,7 @@ class SettingsGlobalValues {
     }
   }
 
-  static const Color mainColor = Color(0xFF210030);
+  static const Color mainColor = Color(0xFF251228);
   static const Color secondColor = Color(0xFF475B63);
   static const Color positiveColor = Color(0xFF339C29);
   static const Color negativeColor = Color(0xFFF42C04);
@@ -89,8 +89,6 @@ class SettingsGlobalValues {
   static const double addHandButtonHeight = 40;
   static const SizedBox globalSizedBox = SizedBox(height: 20);
   static const SizedBox bigSizedBox = SizedBox(height: 70);
-  static const TextStyle globalTextStyleBold =
-      TextStyle(fontWeight: FontWeight.bold);
 
   static const double toastPosition = 50;
 
