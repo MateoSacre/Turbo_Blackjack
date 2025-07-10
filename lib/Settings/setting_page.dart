@@ -65,8 +65,7 @@ class SettingsPageState extends State<SettingsPage> {
               ),
               child: const Text(
                 "Validate",
-                style:
-                    const TextStyle(color: SettingsGlobalValues.neutralColor),
+                style: TextStyle(color: SettingsGlobalValues.neutralColor),
               ),
             )
           ]))),
