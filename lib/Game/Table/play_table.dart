@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:turbo_blackjack/Game/Logic/deck_logic.dart';
 import 'package:turbo_blackjack/Settings/settings_global_values.dart';
 
+import '../Data/game_values.dart';
+
 class PlayTable extends StatefulWidget {
   const PlayTable({super.key});
 
@@ -12,8 +14,13 @@ class PlayTable extends StatefulWidget {
 }
 
 class PlayTableState extends State<PlayTable> {
+  List<Hand> handsToPlay = [];
+
   PlayTableState() {
     Decklogic.resetDeck();
+    for (int i = 0; i < SettingsGlobalValues.maxHands.settingValue; i++) {
+      handsToPlay.add(Hand());
+    }
   }
 
   Widget _buildPosition(String text) {
@@ -54,13 +61,12 @@ class PlayTableState extends State<PlayTable> {
                 final radius =
                     min(constraints.maxWidth, constraints.maxHeight) * 0.40;
                 List<Widget> stackChildren = [];
-                // Player positions
-                int test = 5;
                 double offset = 0;
                 double startAngle = pi + offset;
                 double endAngle = startAngle + (pi - 2 * offset);
-                double step = (endAngle - startAngle) / (test + 1);
-                for (int i = 0; i < test; i++) {
+                double step =
+                    (endAngle - startAngle) / (handsToPlay.length + 1);
+                for (int i = 0; i < handsToPlay.length; i++) {
                   final angle = startAngle + step * (i + 1);
                   final offsetForCard = Offset.fromDirection(angle, radius);
                   stackChildren.add(Positioned(
@@ -70,7 +76,9 @@ class PlayTableState extends State<PlayTable> {
                     top: center.dy -
                         offsetForCard.dy -
                         SettingsGlobalValues.playerCardHeight / 2,
-                    child: _buildPosition(""),
+                    child: GameValues.isGameStarted
+                        ? const Text("ERROR")
+                        : _buildPosition(""),
                   ));
                 }
 
@@ -79,7 +87,9 @@ class PlayTableState extends State<PlayTable> {
                   left: center.dx - SettingsGlobalValues.playerCardWidth / 2,
                   top: center.dy * .5 -
                       SettingsGlobalValues.playerCardHeight / 2,
-                  child: _buildPosition("D"),
+                  child: GameValues.isGameStarted
+                      ? const Text("ERROR")
+                      : _buildPosition("D"),
                 ));
 
                 return Stack(children: stackChildren);
@@ -89,7 +99,11 @@ class PlayTableState extends State<PlayTable> {
           Padding(
             padding: const EdgeInsets.all(20.0),
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                setState(() {
+                  GameValues.isGameStarted = true;
+                });
+              },
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 50),
                 backgroundColor: SettingsGlobalValues.positiveColor,

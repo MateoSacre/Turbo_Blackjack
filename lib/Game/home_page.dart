@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:turbo_blackjack/Game/Data/game_values.dart';
 
 import '../Settings/settings_global_values.dart';
 
@@ -25,8 +26,11 @@ class HomePage extends StatelessWidget {
               child: Column(
                 children: [
                   ElevatedButton(
-                    onPressed: () =>
-                        Navigator.pushReplacementNamed(context, '/playTable'),
+                    onPressed: () => {
+                      GameValues.isGameStarted = false,
+                      GameValues.isGameEnded = false,
+                      Navigator.pushReplacementNamed(context, '/playTable')
+                    },
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 50),
                       backgroundColor: SettingsGlobalValues.positiveColor,
