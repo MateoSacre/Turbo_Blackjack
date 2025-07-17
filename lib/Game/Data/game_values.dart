@@ -14,6 +14,7 @@ class Player {
 
 class Hand {
   List<Card> cards = [];
+  bool isPlayed = false;
 
   getValue() {
     int result = 0;

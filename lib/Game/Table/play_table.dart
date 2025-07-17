@@ -23,16 +23,27 @@ class PlayTableState extends State<PlayTable> {
     }
   }
 
-  Widget _buildPosition(String text) {
-    return Container(
-      width: SettingsGlobalValues.playerCardWidth,
-      height: SettingsGlobalValues.playerCardHeight,
-      decoration: BoxDecoration(
-        color: SettingsGlobalValues.neutralColor,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Center(
-        child: Text(text),
+  Widget _buildPosition(String text, Hand hand) {
+    return GestureDetector(
+      onTap: (!GameValues.isGameStarted && !GameValues.isGameEnded)
+          ? () {
+              setState(() {
+                hand.isPlayed = !hand.isPlayed;
+              });
+            }
+          : null,
+      child: Container(
+        width: SettingsGlobalValues.playerCardWidth,
+        height: SettingsGlobalValues.playerCardHeight,
+        decoration: BoxDecoration(
+          color: hand.isPlayed
+              ? SettingsGlobalValues.positiveColor
+              : SettingsGlobalValues.secondColor,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Center(
+          child: Text(text),
+        ),
       ),
     );
   }
@@ -78,7 +89,7 @@ class PlayTableState extends State<PlayTable> {
                         SettingsGlobalValues.playerCardHeight / 2,
                     child: GameValues.isGameStarted
                         ? const Text("ERROR")
-                        : _buildPosition(""),
+                        : _buildPosition("", handsToPlay[i]),
                   ));
                 }
 
@@ -89,7 +100,7 @@ class PlayTableState extends State<PlayTable> {
                       SettingsGlobalValues.playerCardHeight / 2,
                   child: GameValues.isGameStarted
                       ? const Text("ERROR")
-                      : _buildPosition("D"),
+                      : _buildPosition("D", Hand()),
                 ));
 
                 return Stack(children: stackChildren);
