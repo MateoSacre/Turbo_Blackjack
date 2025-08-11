@@ -48,4 +48,19 @@ class HistoryGame {
       }
     }
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'dealerHand': dealerHand.toJson(),
+      'playerHands': playerHands.map((e) => e.toJson()).toList(),
+    };
+  }
+
+  static HistoryGame fromJson(Map<String, dynamic> json) {
+    HistoryGame game = HistoryGame();
+    game.dealerHand = HistoryHand.fromJson(json['dealerHand']);
+    game.playerHands =
+        (json['playerHands'] as List).map((e) => HistoryHand.fromJson(e)).toList();
+    return game;
+  }
 }

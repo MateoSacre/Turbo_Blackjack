@@ -59,6 +59,21 @@ class HomePage extends StatelessWidget {
                           fontWeight: FontWeight.bold),
                     ),
                   ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () =>
+                        Navigator.pushReplacementNamed(context, '/historyPage'),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 50),
+                      backgroundColor: SettingsGlobalValues.secondColor,
+                    ),
+                    child: const Text(
+                      'History',
+                      style: TextStyle(
+                          color: SettingsGlobalValues.neutralColor,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ],
               ),
             ),
