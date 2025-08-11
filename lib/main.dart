@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'Game/Table/play_table.dart';
 import 'Game/home_page.dart';
 import 'Settings/setting_page.dart';
+import 'Settings/settings_global_values.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await SettingsGlobalValues.loadSettings();
   runApp(const MyApp());
 }
 
