@@ -1,5 +1,8 @@
+import 'package:turbo_blackjack/Game/Data/History/history_game.dart';
+
 import '../../Settings/settings_global_values.dart';
 import '../Data/Card.dart';
+import '../Data/History/history_hand.dart';
 import '../Data/game_values.dart';
 import 'deck_logic.dart';
 
@@ -21,16 +24,22 @@ class GameLogic {
   static void endGame() {
     GameValues.isGameStarted = false;
     GameValues.isGameEnded = false;
+    HistoryGame historyGame = HistoryGame();
     for (Card card in GameValues.dealerHand.cards) {
       GameValues.discardPile.add(card);
+      historyGame.dealerHand.cards.add(card);
     }
     GameValues.dealerHand.cards.clear();
     for (Hand hand in GameValues.player.hands) {
+      HistoryHand historyHand = HistoryHand();
       for (Card card in hand.cards) {
+        historyHand.cards.add(card);
         GameValues.discardPile.add(card);
       }
+      historyGame.playerHands.add(historyHand);
       hand.cards.clear();
     }
+    historyGame.updateStats();
     SettingsGlobalValues.logger.d(
         "\nDeck of [${GameValues.deck.length}] cards at end of game: ${GameValues.deck.map((c) => c.toString()).join(', ')}");
     SettingsGlobalValues.logger.d(
@@ -123,6 +132,7 @@ class GameLogic {
   static surrender(Hand hand) async {
     SettingsGlobalValues.logger.d(
         "Surrendering hand ${GameValues.currentHandIndex} with ${hand.getValue()}");
+    hand.isSurrender = true;
     return await nextHandOrEnd();
   }
 
