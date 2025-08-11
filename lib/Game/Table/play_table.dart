@@ -101,9 +101,7 @@ class PlayTableState extends State<PlayTable> {
           child: Column(
             children: [
               Expanded(child: Text(hand.getCardsValues().join(' '))),
-              Expanded(
-                  child: Text(
-                      hand.getValue() == 0 ? '' : hand.getValue().toString())),
+              Text(hand.getValue() == 0 ? '' : hand.getValue().toString()),
             ],
           ),
         ),

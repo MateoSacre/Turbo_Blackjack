@@ -30,6 +30,7 @@ class Hand {
   List<Card> cards = [];
   bool isPlayed = false;
   bool isSplitted = false;
+  bool isSurrender = false;
 
   int getValue() {
     int result = 0;
