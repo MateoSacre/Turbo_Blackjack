@@ -38,7 +38,7 @@ class HomePage extends StatelessWidget {
                       backgroundColor: SettingsGlobalValues.positiveColor,
                     ),
                     child: const Text(
-                      'Jouer',
+                      'Play',
                       style: TextStyle(
                           color: SettingsGlobalValues.neutralColor,
                           fontWeight: FontWeight.bold),
@@ -53,7 +53,7 @@ class HomePage extends StatelessWidget {
                       backgroundColor: SettingsGlobalValues.secondColor,
                     ),
                     child: const Text(
-                      'Reglages',
+                      'Settings',
                       style: TextStyle(
                           color: SettingsGlobalValues.neutralColor,
                           fontWeight: FontWeight.bold),

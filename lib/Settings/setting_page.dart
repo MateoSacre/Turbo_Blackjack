@@ -18,12 +18,12 @@ class SettingsPageState extends State<SettingsPage> {
     List<Widget> result = [];
     setState(() {
       result.addAll(getOptionBooleanCoDependant(
-          SettingsGlobalValues.showBestOptions,
+          SettingsGlobalValues.showBestOption,
           SettingsGlobalValues.showBestOptionAsPopup));
       result.addAll(getOptionBooleanCoDependant(
           SettingsGlobalValues.showBestOptionAsPopup,
-          SettingsGlobalValues.showBestOptions));
-      result.addAll(getOptionSlider(SettingsGlobalValues.nbDecks));
+          SettingsGlobalValues.showBestOption));
+      result.addAll(getOptionSlider(SettingsGlobalValues.deckCount));
       result.addAll(getOptionSlider(SettingsGlobalValues.maxHands));
       result.addAll(getOptionBoolean(SettingsGlobalValues.useShuffler));
     });
@@ -96,7 +96,7 @@ class SettingsPageState extends State<SettingsPage> {
       Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0),
         child: Text(
-          setting.settingName,
+          setting.settingValue.toString(),
           style: const TextStyle(color: SettingsGlobalValues.neutralColor),
         ),
       ),
