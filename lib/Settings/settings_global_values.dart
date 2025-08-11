@@ -12,7 +12,7 @@ class SettingsGlobalValues {
   static final logger = Logger();
 
   static IntegerSetting nbDecks = IntegerSetting(
-      settingName: 'DECK_NUMBER', settingValue: 6, doesChangeNeedReload: true);
+      settingName: 'DECK_NUMBER', settingValue: 1, doesChangeNeedReload: true);
   static IntegerSetting maxHands = IntegerSetting(
       settingName: 'MAX_HANDS', settingValue: 3, doesChangeNeedReload: false);
   static BoolSetting showBestOptions = BoolSetting(
@@ -81,12 +81,15 @@ class SettingsGlobalValues {
   static const Color negativeColor = Color(0xFFF42C04);
   static const Color neutralColor = Color(0xFFFFFFFF);
   static const Color goldColor = Color(0xffffd700);
+  static const Color activeColor = Color(0xff2873b0);
+  static const Color darkColor = Color(0xff000000);
 
   static const double globalEdgeInset = 10;
-  static const double playerCardWidth = 50;
-  static const double playerCardHeight = 80;
+  static const double playerCardWidth = 60;
+  static const double playerCardHeight = 90;
   static const double addHandButtonWidth = 100;
   static const double addHandButtonHeight = 40;
+  static const double cardBorderWidth = 4;
   static const SizedBox globalSizedBox = SizedBox(height: 20);
   static const SizedBox bigSizedBox = SizedBox(height: 70);
 
@@ -95,4 +98,7 @@ class SettingsGlobalValues {
   static const double mainScreenFont = 100;
   static const double mainFont = 16;
   static const double smallFont = 12;
+
+  static const int timeBetweenDrawsMS = 500;
+  static const int tableRefreshTimeMS = 50;
 }

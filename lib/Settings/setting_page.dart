@@ -33,7 +33,7 @@ class SettingsPageState extends State<SettingsPage> {
   validateSettings() {
     SettingsGlobalValues.saveSettings();
     if (isReloadNeeded) {
-      Decklogic.resetDeck();
+      DeckLogic.resetDeck();
     }
     Navigator.pushReplacementNamed(context, '/homePage');
   }

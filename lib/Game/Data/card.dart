@@ -21,6 +21,56 @@ class Card {
       ),
     );
   }
+
+  getCardValue() {
+    switch (value) {
+      case 1:
+        return "A";
+      case 11:
+        return "J";
+      case 12:
+        return "Q";
+      case 13:
+        return "K";
+      default:
+        return value.toString();
+    }
+  }
+
+  int getCountValue() {
+    if (value < 7) {
+      return 1;
+    }
+    if (value > 9) {
+      return -1;
+    }
+    return 0;
+  }
+
+  @override
+  toString() {
+    return "${getCardValue()}${color.symbol}";
+  }
 }
 
-enum Color { heart, diamond, spade, clubs }
+enum Color {
+  heart,
+  diamond,
+  spade,
+  clubs;
+
+  String get symbol {
+    switch (this) {
+      case Color.heart:
+        return '♥';
+      case Color.diamond:
+        return '♦';
+      case Color.spade:
+        return '♠';
+      case Color.clubs:
+        return '♣';
+      default:
+        return '';
+    }
+  }
+}
