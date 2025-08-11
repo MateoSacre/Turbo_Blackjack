@@ -31,9 +31,9 @@ class GameLogic {
       }
       hand.cards.clear();
     }
-    print(
+    SettingsGlobalValues.logger.d(
         "\nDeck of [${GameValues.deck.length}] cards at end of game: ${GameValues.deck.map((c) => c.toString()).join(', ')}");
-    print(
+    SettingsGlobalValues.logger.d(
         "\nDiscard pile of [${GameValues.discardPile.length}] cards at end of game: ${GameValues.discardPile.map((c) => c.toString()).join(', ')}");
   }
 
@@ -43,19 +43,21 @@ class GameLogic {
   }
 
   static Future<void> nextHandOrEnd() async {
-    print(
+    SettingsGlobalValues.logger.d(
         "Changing from hand [${GameValues.currentHandIndex}] to [${GameValues.currentHandIndex + 1}]");
     GameValues.currentHandIndex++;
     if (GameValues.currentHandIndex < GameValues.player.hands.length) {
       if (GameValues.player.hands[GameValues.currentHandIndex].isSplitted) {
-        print("Splitted hand ${GameValues.currentHandIndex}, hitting");
+        SettingsGlobalValues.logger
+            .d("Splitted hand ${GameValues.currentHandIndex}, hitting");
         hit(GameValues.player.hands[GameValues.currentHandIndex]);
       } else if (isBlackjack()) {
-        print("BlackJack for hand ${GameValues.currentHandIndex}");
+        SettingsGlobalValues.logger
+            .d("BlackJack for hand ${GameValues.currentHandIndex}");
         return await nextHandOrEnd();
       }
     } else {
-      print("Hand not in index, playing for dealer");
+      SettingsGlobalValues.logger.d("Hand not in index, playing for dealer");
       GameValues.currentHandIndex = -1;
       await playForDealer();
       GameValues.isGameEnded = true;
@@ -68,17 +70,20 @@ class GameLogic {
     GameValues.isDrawing = false;
     int handValue = hand.getValue();
     if (handValue > 21) {
-      print("Bust at $handValue for hand ${GameValues.currentHandIndex}");
+      SettingsGlobalValues.logger
+          .d("Bust at $handValue for hand ${GameValues.currentHandIndex}");
       return await nextHandOrEnd();
     }
     if (handValue == 21 && hand.cards.length == 2) {
       return await nextHandOrEnd();
     }
     if (handValue == 21) {
-      print("21 for hand ${GameValues.currentHandIndex}");
+      SettingsGlobalValues.logger
+          .d("21 for hand ${GameValues.currentHandIndex}");
       return await nextHandOrEnd();
     }
-    print("$handValue for hand ${GameValues.currentHandIndex}");
+    SettingsGlobalValues.logger
+        .d("$handValue for hand ${GameValues.currentHandIndex}");
     return;
   }
 
@@ -86,7 +91,8 @@ class GameLogic {
     if (GameValues.currentHandIndex == -1) {
       throw Exception("Current hand is -1 but should exist to stand !");
     } else {
-      print("${hand.getValue()} for hand ${GameValues.currentHandIndex}");
+      SettingsGlobalValues.logger
+          .d("${hand.getValue()} for hand ${GameValues.currentHandIndex}");
       return await nextHandOrEnd();
     }
   }
@@ -100,19 +106,22 @@ class GameLogic {
     hand.cards.add(await DeckLogic.drawCard());
     int handValue = hand.getValue();
     if (handValue > 21) {
-      print("Bust at $handValue for hand ${GameValues.currentHandIndex}");
+      SettingsGlobalValues.logger
+          .d("Bust at $handValue for hand ${GameValues.currentHandIndex}");
       return await nextHandOrEnd();
     }
     if (handValue == 21) {
-      print("21 for hand ${GameValues.currentHandIndex}");
+      SettingsGlobalValues.logger
+          .d("21 for hand ${GameValues.currentHandIndex}");
       return await nextHandOrEnd();
     }
-    print("$handValue for hand ${GameValues.currentHandIndex}");
+    SettingsGlobalValues.logger
+        .d("$handValue for hand ${GameValues.currentHandIndex}");
     return await nextHandOrEnd();
   }
 
   static surrender(Hand hand) async {
-    print(
+    SettingsGlobalValues.logger.d(
         "Surrendering hand ${GameValues.currentHandIndex} with ${hand.getValue()}");
     return await nextHandOrEnd();
   }

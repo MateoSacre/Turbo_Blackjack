@@ -9,7 +9,7 @@ import 'package:turbo_blackjack/Settings/settings_types.dart';
 class SettingsGlobalValues {
   SettingsGlobalValues();
 
-  static final logger = Logger();
+  static final logger = Logger(level: Level.info);
 
   static IntegerSetting deckCount = IntegerSetting(
       settingName: 'Deck Count', settingValue: 1, doesChangeNeedReload: true);
