@@ -51,11 +51,11 @@ class PlayTableState extends State<PlayTable> {
                     hand.isPlayed = !hand.isPlayed;
                     if (hand.isPlayed) {
                       GameValues.player.hands.add(hand);
-                      print(
+                      SettingsGlobalValues.logger.d(
                           "Added hand $text to Player[${GameValues.player.hands}]");
                     } else {
                       GameValues.player.hands.remove(hand);
-                      print(
+                      SettingsGlobalValues.logger.d(
                           "Removed hand $text to Player[${GameValues.player.hands}]");
                     }
                   });
