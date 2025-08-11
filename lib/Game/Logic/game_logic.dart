@@ -1,4 +1,5 @@
 import 'package:turbo_blackjack/Game/Data/History/history_game.dart';
+import 'package:turbo_blackjack/Game/Data/History/history_manager.dart';
 
 import '../../Settings/settings_global_values.dart';
 import '../Data/Card.dart';
@@ -21,7 +22,7 @@ class GameLogic {
     nextHandOrEnd();
   }
 
-  static void endGame() {
+  static Future<void> endGame() async {
     GameValues.isGameStarted = false;
     GameValues.isGameEnded = false;
     HistoryGame historyGame = HistoryGame();
@@ -29,6 +30,7 @@ class GameLogic {
       GameValues.discardPile.add(card);
       historyGame.dealerHand.cards.add(card);
     }
+    historyGame.dealerHand.isDealer = true;
     GameValues.dealerHand.cards.clear();
     for (Hand hand in GameValues.player.hands) {
       HistoryHand historyHand = HistoryHand();
@@ -36,10 +38,12 @@ class GameLogic {
         historyHand.cards.add(card);
         GameValues.discardPile.add(card);
       }
+      historyHand.isSurrender = hand.isSurrender;
       historyGame.playerHands.add(historyHand);
       hand.cards.clear();
     }
     historyGame.updateStats();
+    await HistoryManager.addGame(historyGame);
     SettingsGlobalValues.logger.d(
         "\nDeck of [${GameValues.deck.length}] cards at end of game: ${GameValues.deck.map((c) => c.toString()).join(', ')}");
     SettingsGlobalValues.logger.d(
@@ -47,7 +51,7 @@ class GameLogic {
   }
 
   static Future<void> restartGame() async {
-    endGame();
+    await endGame();
     await startNewGame();
   }
 

@@ -295,10 +295,9 @@ class PlayTableState extends State<PlayTable> {
       return Wrap(
         children: [
           ElevatedButton(
-            onPressed: () {
-              setState(() {
-                GameLogic.restartGame();
-              });
+            onPressed: () async {
+              await GameLogic.restartGame();
+              setState(() {});
             },
             style: ElevatedButton.styleFrom(
               minimumSize: const Size(double.infinity, 50),
@@ -310,10 +309,9 @@ class PlayTableState extends State<PlayTable> {
             ),
           ),
           ElevatedButton(
-            onPressed: () {
-              setState(() {
-                GameLogic.endGame();
-              });
+            onPressed: () async {
+              await GameLogic.endGame();
+              setState(() {});
             },
             style: ElevatedButton.styleFrom(
               minimumSize: const Size(double.infinity, 50),

@@ -8,6 +8,14 @@ class Card {
 
   Card(this.value, this.color);
 
+  Map<String, dynamic> toJson() {
+    return {'value': value, 'color': color.index};
+  }
+
+  static Card fromJson(Map<String, dynamic> json) {
+    return Card(json['value'], Color.values[json['color']]);
+  }
+
   Widget toWidget(String text) {
     return Container(
       width: SettingsGlobalValues.playerCardWidth,
