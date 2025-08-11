@@ -1,5 +1,6 @@
 import 'package:turbo_blackjack/Game/Data/History/history_hand.dart';
-import 'package:turbo_blackjack/Settings/settings_global_values.dart';
+
+import '../../Logic/game_logic.dart';
 
 class HistoryGame {
   late HistoryHand dealerHand;
@@ -20,35 +21,7 @@ class HistoryGame {
       dealerHand.victoryStatus = VictoryStatus.empty;
     }
     for (HistoryHand hand in playerHands) {
-      if (hand.getValue() > 21) {
-        hand.victoryStatus = VictoryStatus.bust;
-      } else if (hand.isSurrender) {
-        hand.victoryStatus = VictoryStatus.surrender;
-      } else if (dealerHand.victoryStatus == VictoryStatus.bust) {
-        if (hand.getValue() == 21 && hand.cards.length == 2) {
-          hand.victoryStatus = VictoryStatus.blackJack;
-        } else {
-          hand.victoryStatus = VictoryStatus.win;
-        }
-      } else if (dealerHand.victoryStatus == VictoryStatus.blackJack &&
-          hand.getValue() == 21 &&
-          hand.cards.length == 2) {
-        hand.victoryStatus = VictoryStatus.draw;
-      } else if (dealerHand.victoryStatus == VictoryStatus.blackJack &&
-          hand.getValue() <= 21) {
-        hand.victoryStatus = VictoryStatus.lost;
-      } else if (hand.getValue() == 21 && hand.cards.length == 2) {
-        hand.victoryStatus = VictoryStatus.blackJack;
-      } else if (dealerValue == hand.getValue()) {
-        hand.victoryStatus = VictoryStatus.draw;
-      } else if (dealerValue < hand.getValue()) {
-        hand.victoryStatus = VictoryStatus.win;
-      } else if (dealerValue > hand.getValue()) {
-        hand.victoryStatus = VictoryStatus.lost;
-      } else {
-        SettingsGlobalValues.logger.f(
-            "Impossible victory status for dealerValue: [$dealerValue] and handValue: [${hand.getValue()}]");
-      }
+      hand.victoryStatus = GameLogic.getVictoryStatus(dealerHand, hand);
     }
   }
 

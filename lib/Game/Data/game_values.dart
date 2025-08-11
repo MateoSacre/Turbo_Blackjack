@@ -11,7 +11,6 @@ class GameValues {
 
   static bool isGameStarted = false;
   static bool isGameEnded = false;
-  static bool isDrawing = false;
 
   static int currentHandIndex = -1;
 }

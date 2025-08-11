@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../Settings/settings_global_values.dart';
-import 'Data/History/history_hand.dart';
 import 'Data/History/history_manager.dart';
+import 'Logic/game_logic.dart';
 
 class HistoryPage extends StatelessWidget {
   const HistoryPage({super.key});

@@ -7,10 +7,19 @@ import '../Data/History/history_hand.dart';
 import '../Data/game_values.dart';
 import 'deck_logic.dart';
 
+enum VictoryStatus {
+  surrender,
+  lost,
+  win,
+  draw,
+  blackJack,
+  bust,
+  empty,
+}
+
 class GameLogic {
   static startNewGame() async {
     GameValues.isGameStarted = true;
-    GameValues.isDrawing = true;
     for (Hand hand in GameValues.player.hands) {
       hand.cards.add(await DeckLogic.drawCard());
     }
@@ -18,32 +27,22 @@ class GameLogic {
     for (Hand hand in GameValues.player.hands) {
       hand.cards.add(await DeckLogic.drawCard());
     }
-    GameValues.isDrawing = false;
     nextHandOrEnd();
   }
 
   static Future<void> endGame() async {
     GameValues.isGameStarted = false;
     GameValues.isGameEnded = false;
-    HistoryGame historyGame = HistoryGame();
     for (Card card in GameValues.dealerHand.cards) {
       GameValues.discardPile.add(card);
-      historyGame.dealerHand.cards.add(card);
     }
-    historyGame.dealerHand.isDealer = true;
     GameValues.dealerHand.cards.clear();
     for (Hand hand in GameValues.player.hands) {
-      HistoryHand historyHand = HistoryHand();
       for (Card card in hand.cards) {
-        historyHand.cards.add(card);
         GameValues.discardPile.add(card);
       }
-      historyHand.isSurrender = hand.isSurrender;
-      historyGame.playerHands.add(historyHand);
       hand.cards.clear();
     }
-    historyGame.updateStats();
-    await HistoryManager.addGame(historyGame);
     SettingsGlobalValues.logger.d(
         "\nDeck of [${GameValues.deck.length}] cards at end of game: ${GameValues.deck.map((c) => c.toString()).join(', ')}");
     SettingsGlobalValues.logger.d(
@@ -71,16 +70,16 @@ class GameLogic {
       }
     } else {
       SettingsGlobalValues.logger.d("Hand not in index, playing for dealer");
-      GameValues.currentHandIndex = -1;
       await playForDealer();
       GameValues.isGameEnded = true;
+      SettingsGlobalValues.logger
+          .d("Changing from hand [${GameValues.currentHandIndex}] to [-1]");
+      GameValues.currentHandIndex = -1;
     }
   }
 
   static hit(Hand hand) async {
-    GameValues.isDrawing = true;
     hand.cards.add(await DeckLogic.drawCard());
-    GameValues.isDrawing = false;
     int handValue = hand.getValue();
     if (handValue > 21) {
       SettingsGlobalValues.logger
@@ -112,6 +111,7 @@ class GameLogic {
 
   static bool isFirstTurnForHand() {
     return GameValues.currentHandIndex >= 0 &&
+        GameValues.currentHandIndex < GameValues.player.hands.length &&
         GameValues.player.hands[GameValues.currentHandIndex].cards.length <= 2;
   }
 
@@ -157,6 +157,8 @@ class GameLogic {
       splittedHand.isSplitted = true;
       splittedHand.isPlayed = true;
       splittedHand.cards.add(hand.cards.removeAt(1));
+      SettingsGlobalValues.logger.d(
+          "Adding one hand from split at index [${GameValues.currentHandIndex + 1}]");
       GameValues.player.hands
           .insert(GameValues.currentHandIndex + 1, splittedHand);
       return hit(hand);
@@ -168,6 +170,8 @@ class GameLogic {
     for (int i = 0; i < SettingsGlobalValues.maxHands.settingValue; i++) {
       GameValues.handsToPlay.add(Hand());
     }
+    SettingsGlobalValues.logger
+        .d("Changing from hand [${GameValues.currentHandIndex}] to [-1]");
     GameValues.currentHandIndex = -1;
   }
 
@@ -179,6 +183,58 @@ class GameLogic {
   static Future<void> playForDealer() async {
     while (GameValues.dealerHand.getValue() < 17) {
       await hit(GameValues.dealerHand);
+    }
+    HistoryGame historyGame = HistoryGame();
+    for (Card card in GameValues.dealerHand.cards) {
+      historyGame.dealerHand.cards.add(card);
+    }
+    historyGame.dealerHand.isDealer = true;
+    for (Hand hand in GameValues.player.hands) {
+      HistoryHand historyHand = HistoryHand();
+      for (Card card in hand.cards) {
+        historyHand.cards.add(card);
+      }
+      historyHand.isSurrender = hand.isSurrender;
+      historyGame.playerHands.add(historyHand);
+    }
+    historyGame.updateStats();
+    await HistoryManager.addGame(historyGame);
+  }
+
+  static VictoryStatus getVictoryStatus(Hand dealerHand, Hand hand) {
+    int handValue = hand.getValue();
+    int dealerValue = dealerHand.getValue();
+    if (handValue > 21) {
+      return VictoryStatus.bust;
+    } else if (hand.isSurrender) {
+      return VictoryStatus.surrender;
+    } else if (dealerValue > 21) {
+      if (handValue == 21 && hand.cards.length == 2) {
+        return VictoryStatus.blackJack;
+      } else {
+        return VictoryStatus.win;
+      }
+    } else if (dealerValue == 21 &&
+        dealerHand.cards.length == 2 &&
+        handValue == 21 &&
+        hand.cards.length == 2) {
+      return VictoryStatus.draw;
+    } else if (dealerValue == 21 &&
+        dealerHand.cards.length == 2 &&
+        handValue <= 21) {
+      return VictoryStatus.lost;
+    } else if (handValue == 21 && hand.cards.length == 2) {
+      return VictoryStatus.blackJack;
+    } else if (dealerValue == handValue) {
+      return VictoryStatus.draw;
+    } else if (dealerValue < handValue) {
+      return VictoryStatus.win;
+    } else if (dealerValue > handValue) {
+      return VictoryStatus.lost;
+    } else {
+      SettingsGlobalValues.logger.f(
+          "Impossible victory status for dealerValue: [${dealerHand.getCardsValues()}] and handValue: [${hand.getCardsValues()}]");
+      return VictoryStatus.empty;
     }
   }
 

@@ -11,6 +11,17 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: SettingsGlobalValues.mainColor,
+      appBar: AppBar(
+        backgroundColor: SettingsGlobalValues.mainColor,
+        actions: [
+          IconButton(
+            onPressed: () =>
+                Navigator.pushReplacementNamed(context, '/settingPage'),
+            icon: const Icon(Icons.settings),
+            color: SettingsGlobalValues.neutralColor,
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -45,34 +56,42 @@ class HomePage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () =>
-                        Navigator.pushReplacementNamed(context, '/settingPage'),
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 50),
-                      backgroundColor: SettingsGlobalValues.secondColor,
-                    ),
-                    child: const Text(
-                      'Settings',
-                      style: TextStyle(
-                          color: SettingsGlobalValues.neutralColor,
-                          fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () =>
-                        Navigator.pushNamed(context, '/historyPage'),
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 50),
-                      backgroundColor: SettingsGlobalValues.secondColor,
-                    ),
-                    child: const Text(
-                      'History',
-                      style: TextStyle(
-                          color: SettingsGlobalValues.neutralColor,
-                          fontWeight: FontWeight.bold),
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () =>
+                              Navigator.pushNamed(context, '/historyPage'),
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: const Size(double.infinity, 50),
+                            backgroundColor: SettingsGlobalValues.secondColor,
+                          ),
+                          child: const Text(
+                            'History',
+                            style: TextStyle(
+                                color: SettingsGlobalValues.neutralColor,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () =>
+                              Navigator.pushNamed(context, '/statsPage'),
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: const Size(double.infinity, 50),
+                            backgroundColor: SettingsGlobalValues.secondColor,
+                          ),
+                          child: const Text(
+                            'Stats',
+                            style: TextStyle(
+                                color: SettingsGlobalValues.neutralColor,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

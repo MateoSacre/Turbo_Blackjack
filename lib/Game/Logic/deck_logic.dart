@@ -50,7 +50,7 @@ class DeckLogic {
     }
 
     for (int round = 1; round <= shuffleCount; round++) {
-      SettingsGlobalValues.logger.d("\n--- Shuffle #$round ---");
+      SettingsGlobalValues.logger.t("\n--- Shuffle #$round ---");
 
       if (deck.length < 8) {
         SettingsGlobalValues.logger
@@ -64,7 +64,7 @@ class DeckLogic {
       deck = _interlaceSubDecks(mixedSubDecks);
     }
 
-    SettingsGlobalValues.logger.d(
+    SettingsGlobalValues.logger.t(
         "\nFinal deck of [${deck.length}] cards after $shuffleCount shuffles: ${deck.map((c) => c.toString()).join(', ')}");
     GameValues.deck = deck;
   }
@@ -76,7 +76,7 @@ class DeckLogic {
       deck[i] = deck[j];
       deck[j] = temp;
     }
-    SettingsGlobalValues.logger.d(
+    SettingsGlobalValues.logger.t(
         "Shuffled deck (simple): ${deck.map((c) => c.toString()).join(', ')}");
     return deck;
   }
@@ -92,7 +92,7 @@ class DeckLogic {
       int currentSize = baseSize + (i < remainder ? 1 : 0);
       int end = currentIndex + currentSize;
       subDecks.add(deck.sublist(currentIndex, end));
-      SettingsGlobalValues.logger.d(
+      SettingsGlobalValues.logger.t(
           "SubDeck $i : ${deck.sublist(currentIndex, end).map((c) => c.toString()).join(', ')}");
       currentIndex = end;
     }
@@ -116,10 +116,10 @@ class DeckLogic {
       List<Card> firstHalf = subDeck.sublist(0, middle);
       List<Card> secondHalf = subDeck.sublist(middle);
 
-      SettingsGlobalValues.logger.d("SubDeck $d split into:");
+      SettingsGlobalValues.logger.t("SubDeck $d split into:");
       SettingsGlobalValues.logger
-          .d("- First half: ${firstHalf.map((c) => c.toString()).join(', ')}");
-      SettingsGlobalValues.logger.d(
+          .t("- First half: ${firstHalf.map((c) => c.toString()).join(', ')}");
+      SettingsGlobalValues.logger.t(
           "- Second half: ${secondHalf.map((c) => c.toString()).join(', ')}");
 
       List<Card> mixed = [];
@@ -129,7 +129,7 @@ class DeckLogic {
         if (j < secondHalf.length) mixed.add(secondHalf[j++]);
       }
 
-      SettingsGlobalValues.logger.d(
+      SettingsGlobalValues.logger.t(
           "SubDeck $d shuffled: ${mixed.map((c) => c.toString()).join(', ')}");
       mixedSubDecks.add(mixed);
     }
@@ -151,7 +151,7 @@ class DeckLogic {
         }
       }
     }
-    SettingsGlobalValues.logger.d(
+    SettingsGlobalValues.logger.t(
         "Deck of [${finalDeck.length}] cards rebuilt after interlacing: ${finalDeck.map((c) => c.toString()).join(', ')}");
     return finalDeck;
   }
@@ -159,7 +159,7 @@ class DeckLogic {
   static Future<Card> drawCard() async {
     checkForDeckShuffle();
     Card card = GameValues.deck.removeLast();
-    SettingsGlobalValues.logger.d(
+    SettingsGlobalValues.logger.t(
         "\nDeck of [${GameValues.deck.length}] cards after draw: ${GameValues.deck.map((c) => c.toString()).join(', ')}");
     await waitForDraw();
 
@@ -191,7 +191,7 @@ class DeckLogic {
     // Initial state logs
     for (int i = 0; i < piles.length; i++) {
       SettingsGlobalValues.logger.d(
-          "\nPile [${i}] of [${piles[i].length}] cards at start of shuffle: ${piles[i].map((c) => c.toString()).join(', ')}");
+          "\nPile [$i] of [${piles[i].length}] cards at start of shuffle: ${piles[i].map((c) => c.toString()).join(', ')}");
     }
     SettingsGlobalValues.logger.d(
         "\nDeck of [${GameValues.deck.length}] cards at start of shuffle: ${GameValues.deck.map((c) => c.toString()).join(', ')}");
@@ -201,7 +201,9 @@ class DeckLogic {
     // Step 3: compute the local running count of each pile
     List<int> pileLocalCounts = List<int>.generate(piles.length, (i) {
       int local = 0;
-      for (final c in piles[i]) local += c.getCountValue();
+      for (final c in piles[i]) {
+        local += c.getCountValue();
+      }
       return local;
     });
 
@@ -220,12 +222,14 @@ class DeckLogic {
 
       // Defensive recomputation of beforeCount if you want the exact log at time t
       int beforeCount = 0;
-      for (final c in piles[targetPileIndex]) beforeCount += c.getCountValue();
+      for (final c in piles[targetPileIndex]) {
+        beforeCount += c.getCountValue();
+      }
 
       // Log avant insertion
-      SettingsGlobalValues.logger.d(
+      SettingsGlobalValues.logger.t(
           "shuffleWithShuffler[card=${card.getCardValue()},value=${card.value},countValue=${card.getCountValue()},"
-          "pileIndex=${targetPileIndex},pileCountBefore=${beforeCount},pileCountAfter=${beforeCount + card.getCountValue()}]");
+          "pileIndex=$targetPileIndex,pileCountBefore=$beforeCount,pileCountAfter=${beforeCount + card.getCountValue()}]");
 
       // Insertion: here in the middle of the pile (kept)
       piles[targetPileIndex]
@@ -241,7 +245,7 @@ class DeckLogic {
     // Final state logs
     for (int i = 0; i < piles.length; i++) {
       SettingsGlobalValues.logger.d(
-          "\nPile [${i}] of [${piles[i].length}] cards at end of shuffle: ${piles[i].map((c) => c.toString()).join(', ')}");
+          "\nPile [$i] of [${piles[i].length}] cards at end of shuffle: ${piles[i].map((c) => c.toString()).join(', ')}");
     }
     SettingsGlobalValues.logger.d(
         "\nDeck of [${GameValues.deck.length}] cards at end of shuffle: ${GameValues.deck.map((c) => c.toString()).join(', ')}");

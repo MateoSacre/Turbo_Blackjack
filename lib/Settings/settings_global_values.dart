@@ -9,7 +9,7 @@ import 'package:turbo_blackjack/Settings/settings_types.dart';
 class SettingsGlobalValues {
   SettingsGlobalValues();
 
-  static final logger = Logger(level: Level.info);
+  static final logger = Logger(level: Level.debug);
 
   static IntegerSetting deckCount = IntegerSetting(
       settingName: 'Deck Count', settingValue: 1, doesChangeNeedReload: true);
@@ -83,14 +83,15 @@ class SettingsGlobalValues {
   static const Color secondColor = Color(0xFF475B63);
   static const Color positiveColor = Color(0xFF339C29);
   static const Color negativeColor = Color(0xFFF42C04);
+  static const Color orangeColor = Color(0xFFF42C04);
   static const Color neutralColor = Color(0xFFFFFFFF);
   static const Color goldColor = Color(0xffffd700);
   static const Color activeColor = Color(0xff2873b0);
   static const Color darkColor = Color(0xff000000);
 
   static const double globalEdgeInset = 10;
-  static const double playerCardWidth = 60;
-  static const double playerCardHeight = 90;
+  static const double playerCardWidth = 75;
+  static const double playerCardHeight = 110;
   static const double addHandButtonWidth = 100;
   static const double addHandButtonHeight = 40;
   static const double cardBorderWidth = 4;

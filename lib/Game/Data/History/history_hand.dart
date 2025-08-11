@@ -1,3 +1,4 @@
+import '../../Logic/game_logic.dart';
 import '../Card.dart';
 import '../game_values.dart';
 
@@ -27,14 +28,4 @@ class HistoryHand extends Hand {
     hand.isDealer = json['isDealer'] ?? false;
     return hand;
   }
-}
-
-enum VictoryStatus {
-  surrender,
-  lost,
-  win,
-  draw,
-  blackJack,
-  bust,
-  empty,
 }

@@ -6,6 +6,7 @@ import 'Settings/setting_page.dart';
 import 'Settings/settings_global_values.dart';
 import 'Game/Data/History/history_manager.dart';
 import 'Game/history_page.dart';
+import 'Game/stats_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +29,7 @@ class MyApp extends StatelessWidget {
         '/playTable': (context) => const PlayTable(),
         '/settingPage': (context) => const SettingsPage(),
         '/historyPage': (context) => const HistoryPage(),
+        '/statsPage': (context) => const StatsPage(),
       },
     );
   }
