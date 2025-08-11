@@ -197,7 +197,7 @@ class PlayTableState extends State<PlayTable> {
               : SettingsGlobalValues.secondColor,
         ),
         child: const Text(
-          'Lancer la partie',
+          'Start Game',
           style: TextStyle(color: SettingsGlobalValues.neutralColor),
         ),
       );
@@ -219,7 +219,7 @@ class PlayTableState extends State<PlayTable> {
               backgroundColor: SettingsGlobalValues.positiveColor,
             ),
             child: const Text(
-              'Tirer',
+              'Hit',
               style: TextStyle(color: SettingsGlobalValues.neutralColor),
             ),
           ),
@@ -235,7 +235,7 @@ class PlayTableState extends State<PlayTable> {
               backgroundColor: SettingsGlobalValues.positiveColor,
             ),
             child: const Text(
-              'Rester',
+              'Stand',
               style: TextStyle(color: SettingsGlobalValues.neutralColor),
             ),
           ),
@@ -252,7 +252,7 @@ class PlayTableState extends State<PlayTable> {
                 backgroundColor: SettingsGlobalValues.positiveColor,
               ),
               child: const Text(
-                'Doubler',
+                'Double',
                 style: TextStyle(color: SettingsGlobalValues.neutralColor),
               ),
             ),
@@ -269,7 +269,7 @@ class PlayTableState extends State<PlayTable> {
                 backgroundColor: SettingsGlobalValues.positiveColor,
               ),
               child: const Text(
-                'Splitter',
+                'Split',
                 style: TextStyle(color: SettingsGlobalValues.neutralColor),
               ),
             ),
@@ -286,7 +286,7 @@ class PlayTableState extends State<PlayTable> {
                 backgroundColor: SettingsGlobalValues.positiveColor,
               ),
               child: const Text(
-                'Abandonner',
+                'Surrender',
                 style: TextStyle(color: SettingsGlobalValues.neutralColor),
               ),
             ),
@@ -307,7 +307,7 @@ class PlayTableState extends State<PlayTable> {
               backgroundColor: SettingsGlobalValues.positiveColor,
             ),
             child: const Text(
-              'Relancer la partie',
+              'Restart Game',
               style: TextStyle(color: SettingsGlobalValues.neutralColor),
             ),
           ),
@@ -322,7 +322,7 @@ class PlayTableState extends State<PlayTable> {
               backgroundColor: SettingsGlobalValues.positiveColor,
             ),
             child: const Text(
-              'Arreter la partie',
+              'End Game',
               style: TextStyle(color: SettingsGlobalValues.neutralColor),
             ),
           ),

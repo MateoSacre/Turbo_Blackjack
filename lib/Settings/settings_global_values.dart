@@ -11,39 +11,42 @@ class SettingsGlobalValues {
 
   static final logger = Logger();
 
-  static IntegerSetting nbDecks = IntegerSetting(
-      settingName: 'DECK_NUMBER', settingValue: 1, doesChangeNeedReload: true);
+  static IntegerSetting deckCount = IntegerSetting(
+      settingName: 'Deck Count', settingValue: 1, doesChangeNeedReload: true);
   static IntegerSetting maxHands = IntegerSetting(
-      settingName: 'MAX_HANDS', settingValue: 3, doesChangeNeedReload: false);
-  static BoolSetting showBestOptions = BoolSetting(
-      settingName: "SHOW_BEST_OPTION",
+      settingName: 'Max Hands', settingValue: 3, doesChangeNeedReload: false);
+  static BoolSetting showBestOption = BoolSetting(
+      settingName: "Show Best Option",
       settingValue: false,
       doesChangeNeedReload: false);
   static BoolSetting showBestOptionAsPopup = BoolSetting(
-      settingName: "SHOW_BEST_OPTION_AS_POPUP",
+      settingName: "Show Best Option as Popup",
       settingValue: false,
       doesChangeNeedReload: false);
   static BoolSetting useShuffler = BoolSetting(
-      settingName: "USE_SHUFFLER",
+      settingName: "Use Shuffler",
       settingValue: false,
       doesChangeNeedReload: true);
 
   static Map<String, dynamic> toJson() {
     return {
-      'nbDecks': nbDecks.toJson(),
+      'deckCount': deckCount.toJson(),
       'maxHands': maxHands.toJson(),
-      'showBestOptions': showBestOptions.toJson(),
+      'showBestOption': showBestOption.toJson(),
       'showBestOptionAsPopup': showBestOptionAsPopup.toJson(),
+      'useShuffler': useShuffler.toJson(),
     };
   }
 
   factory SettingsGlobalValues.fromJson(Map<String, dynamic> json) {
-    SettingsGlobalValues.nbDecks = IntegerSetting.fromJson(json['nbDecks']);
+    SettingsGlobalValues.deckCount = IntegerSetting.fromJson(json['deckCount']);
     SettingsGlobalValues.maxHands = IntegerSetting.fromJson(json['maxHands']);
-    SettingsGlobalValues.showBestOptions =
-        BoolSetting.fromJson(json['showBestOptions']);
+    SettingsGlobalValues.showBestOption =
+        BoolSetting.fromJson(json['showBestOption']);
     SettingsGlobalValues.showBestOptionAsPopup =
         BoolSetting.fromJson(json['showBestOptionAsPopup']);
+    SettingsGlobalValues.useShuffler =
+        BoolSetting.fromJson(json['useShuffler']);
 
     return SettingsGlobalValues();
   }
@@ -64,14 +67,15 @@ class SettingsGlobalValues {
         final jsonString = await file.readAsString();
         final jsonData = jsonDecode(jsonString);
 
-        nbDecks = IntegerSetting.fromJson(jsonData['nbDecks']);
+        deckCount = IntegerSetting.fromJson(jsonData['deckCount']);
         maxHands = IntegerSetting.fromJson(jsonData['maxHands']);
-        showBestOptions = BoolSetting.fromJson(jsonData['showBestOptions']);
+        showBestOption = BoolSetting.fromJson(jsonData['showBestOption']);
         showBestOptionAsPopup =
             BoolSetting.fromJson(jsonData['showBestOptionAsPopup']);
+        useShuffler = BoolSetting.fromJson(jsonData['useShuffler']);
       }
     } catch (e) {
-      logger.w("Erreur lors du chargement des paramètres: $e");
+      logger.w("Error while loading settings: $e");
     }
   }
 

@@ -32,9 +32,9 @@ class GameLogic {
       hand.cards.clear();
     }
     print(
-        "\nDeck de [${GameValues.deck.length}] cartes en fin de partie : ${GameValues.deck.map((c) => c.toString()).join(', ')}");
+        "\nDeck of [${GameValues.deck.length}] cards at end of game: ${GameValues.deck.map((c) => c.toString()).join(', ')}");
     print(
-        "\nDéfausse de [${GameValues.discardPile.length}] cartes en fin de partie : ${GameValues.discardPile.map((c) => c.toString()).join(', ')}");
+        "\nDiscard pile of [${GameValues.discardPile.length}] cards at end of game: ${GameValues.discardPile.map((c) => c.toString()).join(', ')}");
   }
 
   static Future<void> restartGame() async {
