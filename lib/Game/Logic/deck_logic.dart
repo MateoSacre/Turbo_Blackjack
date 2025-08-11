@@ -51,8 +51,7 @@ class DeckLogic {
       print("\n--- Shuffle #$round ---");
 
       if (deck.length < 8) {
-        print(
-            "Deck too small to cut, using simple shuffle (Fisher-Yates).");
+        print("Deck too small to cut, using simple shuffle (Fisher-Yates).");
         deck = _basicShuffle(deck, random);
         continue;
       }
@@ -146,8 +145,6 @@ class DeckLogic {
         }
       }
     }
-
-    finalDeck.sort((a, b) => a.value.compareTo(b.value));
     print(
         "Deck of [${finalDeck.length}] cards rebuilt after interlacing: ${finalDeck.map((c) => c.toString()).join(', ')}");
     return finalDeck;
