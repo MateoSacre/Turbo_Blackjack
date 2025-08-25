@@ -77,7 +77,7 @@ class SettingsPageState extends State<SettingsPage> {
   }
 
   List<Widget> getOptionSlider(IntegerSetting setting) {
-    return getOptionSliderWithValues(setting, 1, 10, 9);
+    return getOptionSliderWithValues(setting, 1, 7, 6);
   }
 
   List<Widget> getOptionSliderWithValues(

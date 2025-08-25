@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../Settings/settings_global_values.dart';
 import 'Data/History/history_game.dart';
-import 'Data/History/history_hand.dart';
 import 'Data/History/history_manager.dart';
+import 'Logic/game_logic.dart';
 
 class StatsPage extends StatefulWidget {
   const StatsPage({super.key});
@@ -39,13 +39,7 @@ class _StatsPageState extends State<StatsPage> {
   }
 
   Map<String, dynamic> _calculateStats(List<HistoryGame> games) {
-    int win = 0,
-        blackjack = 0,
-        draw = 0,
-        bust = 0,
-        lost = 0,
-        surrender = 0;
-    int dealerWin = 0, dealerLost = 0;
+    int win = 0, blackjack = 0, draw = 0, bust = 0, lost = 0, surrender = 0;
     int totalHands = 0;
     Map<int, int> cardWinCount = {for (var i = 1; i <= 13; i++) i: 0};
     Map<int, int> cardCount = {for (var i = 1; i <= 13; i++) i: 0};
@@ -62,14 +56,12 @@ class _StatsPageState extends State<StatsPage> {
         switch (hand.victoryStatus) {
           case VictoryStatus.win:
             win++;
-            dealerLost++;
             for (final card in hand.cards) {
               cardWinCount[card.value] = cardWinCount[card.value]! + 1;
             }
             break;
           case VictoryStatus.blackJack:
             blackjack++;
-            dealerLost++;
             for (final card in hand.cards) {
               cardWinCount[card.value] = cardWinCount[card.value]! + 1;
             }
@@ -79,15 +71,12 @@ class _StatsPageState extends State<StatsPage> {
             break;
           case VictoryStatus.bust:
             bust++;
-            dealerWin++;
             break;
           case VictoryStatus.lost:
             lost++;
-            dealerWin++;
             break;
           case VictoryStatus.surrender:
             surrender++;
-            dealerWin++;
             break;
           case VictoryStatus.empty:
             break;
@@ -143,8 +132,8 @@ class _StatsPageState extends State<StatsPage> {
       'bust': toPct(bust),
       'lost': toPct(lost),
       'surrender': toPct(surrender),
-      'dealerWin': toPct(dealerWin),
-      'dealerLost': toPct(dealerLost),
+      'playerWin': toPct(win + blackjack),
+      'playerLost': toPct(surrender + lost + bust),
       'mostWinCard': mostWinCard,
       'leastWinCard': leastWinCard,
       'mostCard': mostCard,
@@ -177,21 +166,55 @@ class _StatsPageState extends State<StatsPage> {
                 children: [
                   const Text(
                     'Games:',
-                    style:
-                        TextStyle(color: SettingsGlobalValues.neutralColor),
+                    style: TextStyle(color: SettingsGlobalValues.neutralColor),
                   ),
                   const SizedBox(width: 10),
                   DropdownButton<String>(
                     value: selectedOption,
-                    dropdownColor: SettingsGlobalValues.mainColor,
+                    dropdownColor: SettingsGlobalValues.secondColor,
                     items: const [
-                      DropdownMenuItem(value: '10', child: Text('10')),
-                      DropdownMenuItem(value: '50', child: Text('50')),
-                      DropdownMenuItem(value: '100', child: Text('100')),
-                      DropdownMenuItem(value: '500', child: Text('500')),
-                      DropdownMenuItem(value: 'All', child: Text('All')),
                       DropdownMenuItem(
-                          value: 'Custom', child: Text('Custom')),
+                          value: '10',
+                          child: Text(
+                            '10',
+                            style: TextStyle(
+                                color: SettingsGlobalValues.neutralColor),
+                          )),
+                      DropdownMenuItem(
+                          value: '50',
+                          child: Text(
+                            '50',
+                            style: TextStyle(
+                                color: SettingsGlobalValues.neutralColor),
+                          )),
+                      DropdownMenuItem(
+                          value: '100',
+                          child: Text(
+                            '100',
+                            style: TextStyle(
+                                color: SettingsGlobalValues.neutralColor),
+                          )),
+                      DropdownMenuItem(
+                          value: '500',
+                          child: Text(
+                            '500',
+                            style: TextStyle(
+                                color: SettingsGlobalValues.neutralColor),
+                          )),
+                      DropdownMenuItem(
+                          value: 'All',
+                          child: Text(
+                            'All',
+                            style: TextStyle(
+                                color: SettingsGlobalValues.neutralColor),
+                          )),
+                      DropdownMenuItem(
+                          value: 'Custom',
+                          child: Text(
+                            'Custom',
+                            style: TextStyle(
+                                color: SettingsGlobalValues.neutralColor),
+                          )),
                     ],
                     onChanged: (value) {
                       setState(() {
@@ -206,7 +229,12 @@ class _StatsPageState extends State<StatsPage> {
                       child: TextField(
                         controller: customController,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(hintText: '0'),
+                        style: const TextStyle(
+                            color: SettingsGlobalValues.neutralColor),
+                        decoration: const InputDecoration(
+                            hintText: '10',
+                            hintStyle: TextStyle(
+                                color: SettingsGlobalValues.neutralColor)),
                         onChanged: (_) => setState(() {}),
                       ),
                     ),
@@ -214,43 +242,44 @@ class _StatsPageState extends State<StatsPage> {
               ),
               const SizedBox(height: 20),
               Text(
-                'Player win: ${stats['win'].toStringAsFixed(1)}%',
+                'Player win: ${stats['playerWin'].toStringAsFixed(1)}%',
                 style:
                     const TextStyle(color: SettingsGlobalValues.neutralColor),
               ),
               Text(
-                'Blackjack: ${stats['blackjack'].toStringAsFixed(1)}%',
+                '    Win: ${stats['win'].toStringAsFixed(1)}%',
                 style:
                     const TextStyle(color: SettingsGlobalValues.neutralColor),
               ),
               Text(
-                'Draw: ${stats['draw'].toStringAsFixed(1)}%',
+                '    Blackjack: ${stats['blackjack'].toStringAsFixed(1)}%',
                 style:
                     const TextStyle(color: SettingsGlobalValues.neutralColor),
               ),
               Text(
-                'Bust: ${stats['bust'].toStringAsFixed(1)}%',
+                '    Bust: ${stats['bust'].toStringAsFixed(1)}%',
                 style:
                     const TextStyle(color: SettingsGlobalValues.neutralColor),
               ),
               Text(
-                'Lost: ${stats['lost'].toStringAsFixed(1)}%',
+                '    Lost: ${stats['lost'].toStringAsFixed(1)}%',
                 style:
                     const TextStyle(color: SettingsGlobalValues.neutralColor),
               ),
               Text(
-                'Surrender: ${stats['surrender'].toStringAsFixed(1)}%',
+                '    Surrender: ${stats['surrender'].toStringAsFixed(1)}%',
                 style:
                     const TextStyle(color: SettingsGlobalValues.neutralColor),
               ),
               const SizedBox(height: 20),
               Text(
-                'Dealer win: ${stats['dealerWin'].toStringAsFixed(1)}%',
+                'Dealer win: ${stats['playerLost'].toStringAsFixed(1)}%',
                 style:
                     const TextStyle(color: SettingsGlobalValues.neutralColor),
               ),
+              const SizedBox(height: 20),
               Text(
-                'Dealer lost: ${stats['dealerLost'].toStringAsFixed(1)}%',
+                'Draw: ${stats['draw'].toStringAsFixed(1)}%',
                 style:
                     const TextStyle(color: SettingsGlobalValues.neutralColor),
               ),
@@ -283,4 +312,3 @@ class _StatsPageState extends State<StatsPage> {
     );
   }
 }
-
