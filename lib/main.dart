@@ -24,6 +24,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       home: const HomePage(),
+      debugShowCheckedModeBanner: false,
       routes: {
         '/homePage': (context) => const HomePage(),
         '/playTable': (context) => const PlayTable(),
