@@ -70,7 +70,7 @@ class PlayTableState extends State<PlayTable> {
           borderRadius: BorderRadius.circular(8),
         ),
         child: Center(
-          child: Text(text),
+          child: Text(text, style: const TextStyle(color: SettingsGlobalValues.neutralColor)),
         ),
       ),
     );
@@ -99,8 +99,8 @@ class PlayTableState extends State<PlayTable> {
         child: Center(
           child: Column(
             children: [
-              Expanded(child: Text(hand.getCardsValues().join(' '))),
-              Text(hand.getValue() == 0 ? '' : hand.getValue().toString()),
+              Expanded(child: Text(hand.getCardsValues().join(' '), style: const TextStyle(color: SettingsGlobalValues.neutralColor),)),
+              Text(hand.getValue() == 0 ? '' : hand.getValue().toString(), style: const TextStyle(color: SettingsGlobalValues.neutralColor)),
             ],
           ),
         ),
@@ -122,203 +122,199 @@ class PlayTableState extends State<PlayTable> {
         ),
         title: const Text('Turbo Blackjack'),
       ),
-      body: Column(
-        children: [
-          // Dealer position
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: GameValues.isGameStarted
-                ? _buildPositionFromHand(GameValues.dealerHand)
-                : _buildPosition("D", Hand()),
-          ),
-          // Player's Hands
-          Expanded(
-              child: Center(
+      body: SettingsGlobalValues.isLandscape(context)
+          ? Row(
+              children: getTable(),
+            )
+          : Column(
+              children: getTable(),
+            ),
+    );
+  }
+
+  getTable() {
+    return [
+      // Dealer position
+      Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: GameValues.isGameStarted
+            ? _buildPositionFromHand(GameValues.dealerHand)
+            : _buildPosition("D", Hand()),
+      ),
+      // Player's Hands
+      Expanded(
+          child: Center(
+        child: Wrap(
+          alignment: WrapAlignment.center,
+          direction: SettingsGlobalValues.isLandscape(context) ? Axis.vertical : Axis.horizontal,
+          spacing: SettingsGlobalValues.globalEdgeInset,
+          runSpacing: SettingsGlobalValues.globalEdgeInset,
+          children: getCards(context),
+        ),
+      )),
+      // Contextual Buttons
+      Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Center(
             child: Wrap(
+              direction: SettingsGlobalValues.isLandscape(context) ? Axis.vertical : Axis.horizontal,
               alignment: WrapAlignment.center,
-              direction: Axis.horizontal,
               spacing: SettingsGlobalValues.globalEdgeInset,
               runSpacing: SettingsGlobalValues.globalEdgeInset,
-              children: List.generate(
-                (GameValues.isGameStarted
-                    ? GameValues.player.hands.length
-                    : GameValues.handsToPlay.length),
-                (i) => GameValues.isGameStarted
-                    ? _buildPositionFromHand(GameValues
-                        .player.hands[GameValues.player.hands.length - 1 - i])
-                    : _buildPosition(
-                        "$i",
-                        GameValues.handsToPlay[
-                            GameValues.handsToPlay.length - 1 - i]),
-              ),
+              children: getButtons(),
             ),
           )),
-          // Contextual Buttons
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: getButtons(),
-          ),
-        ],
-      ),
-    );
+    ];
   }
 
   getButtons() {
     if (!GameValues.isGameEnded && !GameValues.isGameStarted) {
       bool hasHands = GameValues.player.hands.isNotEmpty;
-      return ElevatedButton(
-        onPressed: () {
-          setState(() {
-            if (hasHands) GameLogic.startNewGame();
-          });
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: hasHands
-              ? SettingsGlobalValues.positiveColor
-              : SettingsGlobalValues.secondColor,
+      return [
+        ElevatedButton(
+          onPressed: () {
+            setState(() {
+              if (hasHands) GameLogic.startNewGame();
+            });
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: hasHands
+                ? SettingsGlobalValues.positiveColor
+                : SettingsGlobalValues.secondColor,
+          ),
+          child: const Text(
+            'Start Game',
+            style: TextStyle(color: SettingsGlobalValues.neutralColor),
+          ),
         ),
-        child: const Text(
-          'Start Game',
-          style: TextStyle(color: SettingsGlobalValues.neutralColor),
-        ),
-      );
+      ];
     }
     if (GameValues.isGameStarted && !GameValues.isGameEnded) {
-      return Wrap(
-        alignment: WrapAlignment.center,
-        spacing: SettingsGlobalValues.globalEdgeInset,
-        runSpacing: SettingsGlobalValues.globalEdgeInset,
-        children: [
-          // Hit=
-          ElevatedButton(
-            onPressed: () {
+      return [
+        // Hit=
+        ElevatedButton(
+          onPressed: () {
+            setState(() {
+              GameLogic.hit(
+                  GameValues.player.hands[GameValues.currentHandIndex]);
+            });
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: SettingsGlobalValues.positiveColor,
+          ),
+          child: const Text(
+            'Hit',
+            style: TextStyle(color: SettingsGlobalValues.neutralColor),
+          ),
+        ),
+        // Stand
+        ElevatedButton(
+          onPressed: () {
+            setState(() {
+              GameLogic.stand(
+                  GameValues.player.hands[GameValues.currentHandIndex]);
+            });
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: SettingsGlobalValues.positiveColor,
+          ),
+          child: const Text(
+            'Stand',
+            style: TextStyle(color: SettingsGlobalValues.neutralColor),
+          ),
+        ),
+        // Double
+        ElevatedButton(
+          onPressed: () {
+            if (GameLogic.isFirstTurnForHand()) {
               setState(() {
-                GameLogic.hit(
+                GameLogic.double(
                     GameValues.player.hands[GameValues.currentHandIndex]);
               });
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: SettingsGlobalValues.positiveColor,
-            ),
-            child: const Text(
-              'Hit',
-              style: TextStyle(color: SettingsGlobalValues.neutralColor),
-            ),
+            }
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: GameLogic.isFirstTurnForHand()
+                ? SettingsGlobalValues.positiveColor
+                : SettingsGlobalValues.secondColor,
           ),
-          // Stand
-          ElevatedButton(
-            onPressed: () {
+          child: const Text(
+            'Double',
+            style: TextStyle(color: SettingsGlobalValues.neutralColor),
+          ),
+        ),
+        // Split
+        ElevatedButton(
+          onPressed: () {
+            if (GameLogic.isFirstTurnForHand() && GameLogic.canSplit()) {
               setState(() {
-                GameLogic.stand(
+                GameLogic.split(
                     GameValues.player.hands[GameValues.currentHandIndex]);
               });
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: SettingsGlobalValues.positiveColor,
-            ),
-            child: const Text(
-              'Stand',
-              style: TextStyle(color: SettingsGlobalValues.neutralColor),
-            ),
+            }
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor:
+                GameLogic.isFirstTurnForHand() && GameLogic.canSplit()
+                    ? SettingsGlobalValues.positiveColor
+                    : SettingsGlobalValues.secondColor,
           ),
-          // Double
-          ElevatedButton(
-            onPressed: () {
-              if (GameLogic.isFirstTurnForHand()) {
-                setState(() {
-                  GameLogic.double(
-                      GameValues.player.hands[GameValues.currentHandIndex]);
-                });
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: GameLogic.isFirstTurnForHand()
-                  ? SettingsGlobalValues.positiveColor
-                  : SettingsGlobalValues.secondColor,
-            ),
-            child: const Text(
-              'Double',
-              style: TextStyle(color: SettingsGlobalValues.neutralColor),
-            ),
+          child: const Text(
+            'Split',
+            style: TextStyle(color: SettingsGlobalValues.neutralColor),
           ),
-          // Split
-          ElevatedButton(
-            onPressed: () {
-              if (GameLogic.isFirstTurnForHand() && GameLogic.canSplit()) {
-                setState(() {
-                  GameLogic.split(
-                      GameValues.player.hands[GameValues.currentHandIndex]);
-                });
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor:
-                  GameLogic.isFirstTurnForHand() && GameLogic.canSplit()
-                      ? SettingsGlobalValues.positiveColor
-                      : SettingsGlobalValues.secondColor,
-            ),
-            child: const Text(
-              'Split',
-              style: TextStyle(color: SettingsGlobalValues.neutralColor),
-            ),
+        ),
+        // Surrender
+        ElevatedButton(
+          onPressed: () {
+            if (GameLogic.isFirstTurnForHand()) {
+              setState(() {
+                GameLogic.surrender(
+                    GameValues.player.hands[GameValues.currentHandIndex]);
+              });
+            }
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: GameLogic.isFirstTurnForHand()
+                ? SettingsGlobalValues.positiveColor
+                : SettingsGlobalValues.secondColor,
           ),
-          // Surrender
-          ElevatedButton(
-            onPressed: () {
-              if (GameLogic.isFirstTurnForHand()) {
-                setState(() {
-                  GameLogic.surrender(
-                      GameValues.player.hands[GameValues.currentHandIndex]);
-                });
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: GameLogic.isFirstTurnForHand()
-                  ? SettingsGlobalValues.positiveColor
-                  : SettingsGlobalValues.secondColor,
-            ),
-            child: const Text(
-              'Surrender',
-              style: TextStyle(color: SettingsGlobalValues.neutralColor),
-            ),
+          child: const Text(
+            'Surrender',
+            style: TextStyle(color: SettingsGlobalValues.neutralColor),
           ),
-        ],
-      );
+        ),
+      ];
     }
     if (GameValues.isGameEnded && GameValues.isGameStarted) {
-      return Wrap(
-        alignment: WrapAlignment.center,
-        spacing: SettingsGlobalValues.globalEdgeInset,
-        runSpacing: SettingsGlobalValues.globalEdgeInset,
-        children: [
-          ElevatedButton(
-            onPressed: () async {
-              await GameLogic.restartGame();
-              setState(() {});
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: SettingsGlobalValues.positiveColor,
-            ),
-            child: const Text(
-              'Restart Game',
-              style: TextStyle(color: SettingsGlobalValues.neutralColor),
-            ),
+      return [
+        ElevatedButton(
+          onPressed: () async {
+            await GameLogic.restartGame();
+            setState(() {});
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: SettingsGlobalValues.positiveColor,
           ),
-          ElevatedButton(
-            onPressed: () async {
-              await GameLogic.endGame();
-              setState(() {});
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: SettingsGlobalValues.positiveColor,
-            ),
-            child: const Text(
-              'End Game',
-              style: TextStyle(color: SettingsGlobalValues.neutralColor),
-            ),
+          child: const Text(
+            'Restart Game',
+            style: TextStyle(color: SettingsGlobalValues.neutralColor),
           ),
-        ],
-      );
+        ),
+        ElevatedButton(
+          onPressed: () async {
+            await GameLogic.endGame();
+            setState(() {});
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: SettingsGlobalValues.positiveColor,
+          ),
+          child: const Text(
+            'End Game',
+            style: TextStyle(color: SettingsGlobalValues.neutralColor),
+          ),
+        ),
+      ];
     }
   }
 
@@ -361,4 +357,20 @@ class PlayTableState extends State<PlayTable> {
       }
     }
   }
+
+  List<Widget> getCards(BuildContext context) {
+    final isStarted = GameValues.isGameStarted;
+    final hands = isStarted ? GameValues.player.hands : GameValues.handsToPlay;
+    final length = hands.length;
+
+    return List.generate(length, (i) {
+      final index = SettingsGlobalValues.isLandscape(context) ? i : length - 1 - i;
+      final hand = hands[index];
+
+      return isStarted
+          ? _buildPositionFromHand(hand)
+          : _buildPosition('$i', hand);
+    });
+  }
+
 }

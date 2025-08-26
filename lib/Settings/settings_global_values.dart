@@ -79,6 +79,12 @@ class SettingsGlobalValues {
     }
   }
 
+  static isLandscape(BuildContext context) {
+    double width = MediaQuery.sizeOf(context).width;
+    double height = MediaQuery.sizeOf(context).height;
+    return width > height;
+  }
+
   static const Color mainColor = Color(0xFF251228);
   static const Color secondColor = Color(0xFF475B63);
   static const Color positiveColor = Color(0xFF339C29);
