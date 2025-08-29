@@ -126,6 +126,8 @@ class _StatsPageState extends State<StatsPage> {
       'leastWinCard': leastWinCard,
       'mostCard': mostCard,
       'leastCard': leastCard,
+      'cardWinCount': cardWinCount,
+      'cardCount': cardCount,
     };
   }
 
@@ -207,6 +209,106 @@ class _StatsPageState extends State<StatsPage> {
     );
   }
 
+  Widget _buildSummaryChart(
+      BuildContext context, Map<String, dynamic> stats) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final size = constraints.maxWidth;
+        const textStyle =
+            TextStyle(color: SettingsGlobalValues.neutralColor, fontSize: 12);
+        final radius =
+            size / SettingsGlobalValues.statChartRadius;
+        return SizedBox(
+          width: size,
+          height: size,
+          child: PieChart(
+            PieChartData(
+              sections: [
+                PieChartSectionData(
+                  color: SettingsGlobalValues.positiveColor,
+                  value: stats['playerWin'],
+                  title: '${stats['playerWin'].toStringAsFixed(1)}%',
+                  titleStyle: textStyle,
+                  radius: radius,
+                ),
+                PieChartSectionData(
+                  color: SettingsGlobalValues.negativeColor,
+                  value: stats['playerLost'],
+                  title: '${stats['playerLost'].toStringAsFixed(1)}%',
+                  titleStyle: textStyle,
+                  radius: radius,
+                ),
+                PieChartSectionData(
+                  color: SettingsGlobalValues.activeColor,
+                  value: stats['draw'],
+                  title: '${stats['draw'].toStringAsFixed(1)}%',
+                  titleStyle: textStyle,
+                  radius: radius,
+                ),
+              ],
+              borderData: FlBorderData(show: false),
+              sectionsSpace: 0,
+              centerSpaceRadius: 0,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCardBarChart(
+      Map<int, int> data, Color color) {
+    final barGroups = data.entries
+        .map((e) => BarChartGroupData(x: e.key, barRods: [
+              BarChartRodData(toY: e.value.toDouble(), color: color)
+            ]))
+        .toList();
+    return SizedBox(
+      height: 200,
+      child: BarChart(
+        BarChartData(
+          barGroups: barGroups,
+          borderData: FlBorderData(show: false),
+          gridData: FlGridData(show: false),
+          titlesData: FlTitlesData(
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                getTitlesWidget: (value, meta) {
+                  String text;
+                  switch (value.toInt()) {
+                    case 1:
+                      text = 'A';
+                      break;
+                    case 11:
+                      text = 'J';
+                      break;
+                    case 12:
+                      text = 'Q';
+                      break;
+                    case 13:
+                      text = 'K';
+                      break;
+                    default:
+                      text = value.toInt().toString();
+                  }
+                  return Text(text,
+                      style: const TextStyle(
+                          color: SettingsGlobalValues.neutralColor,
+                          fontSize: 10));
+                },
+              ),
+            ),
+            leftTitles:
+                AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final games = _getGames();
@@ -277,40 +379,13 @@ class _StatsPageState extends State<StatsPage> {
     );
 
     final chart = _buildResponsiveChart(context, stats);
-
-    final details = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Player win: ${stats['playerWin'].toStringAsFixed(1)}%',
-            style: const TextStyle(color: SettingsGlobalValues.neutralColor)),
-        Text('    Win: ${stats['win'].toStringAsFixed(1)}%',
-            style: const TextStyle(color: SettingsGlobalValues.neutralColor)),
-        Text('    Blackjack: ${stats['blackjack'].toStringAsFixed(1)}%',
-            style: const TextStyle(color: SettingsGlobalValues.neutralColor)),
-        Text('    Bust: ${stats['bust'].toStringAsFixed(1)}%',
-            style: const TextStyle(color: SettingsGlobalValues.neutralColor)),
-        Text('    Lost: ${stats['lost'].toStringAsFixed(1)}%',
-            style: const TextStyle(color: SettingsGlobalValues.neutralColor)),
-        Text('    Surrender: ${stats['surrender'].toStringAsFixed(1)}%',
-            style: const TextStyle(color: SettingsGlobalValues.neutralColor)),
-        const SizedBox(height: 20),
-        Text('Dealer win: ${stats['playerLost'].toStringAsFixed(1)}%',
-            style: const TextStyle(color: SettingsGlobalValues.neutralColor)),
-        const SizedBox(height: 20),
-        Text('Draw: ${stats['draw'].toStringAsFixed(1)}%',
-            style: const TextStyle(color: SettingsGlobalValues.neutralColor)),
-        const SizedBox(height: 20),
-        Text('Most winning card: ${stats['mostWinCard']}',
-            style: const TextStyle(color: SettingsGlobalValues.neutralColor)),
-        Text('Least winning card: ${stats['leastWinCard']}',
-            style: const TextStyle(color: SettingsGlobalValues.neutralColor)),
-        const SizedBox(height: 20),
-        Text('Most frequent card: ${stats['mostCard']}',
-            style: const TextStyle(color: SettingsGlobalValues.neutralColor)),
-        Text('Least frequent card: ${stats['leastCard']}',
-            style: const TextStyle(color: SettingsGlobalValues.neutralColor)),
-      ],
-    );
+    final summary = _buildSummaryChart(context, stats);
+    final winCardChart = _buildCardBarChart(
+        Map<int, int>.from(stats['cardWinCount']),
+        SettingsGlobalValues.positiveColor);
+    final cardCountChart = _buildCardBarChart(
+        Map<int, int>.from(stats['cardCount']),
+        SettingsGlobalValues.activeColor);
 
     return Scaffold(
       backgroundColor: SettingsGlobalValues.mainColor,
@@ -331,7 +406,11 @@ class _StatsPageState extends State<StatsPage> {
               const SizedBox(height: 20),
               chart,
               const SizedBox(height: 20),
-              details,
+              summary,
+              const SizedBox(height: 20),
+              winCardChart,
+              const SizedBox(height: 20),
+              cardCountChart,
             ],
           ),
         ),
