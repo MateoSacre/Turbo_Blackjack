@@ -62,7 +62,7 @@ class SettingsPageState extends State<SettingsPage> {
                   minimumSize: const Size(double.infinity, 50),
                   backgroundColor: SettingsGlobalValues.positiveColor,
                   disabledBackgroundColor:
-                      SettingsGlobalValues.negativeColor.withOpacity(.8),
+                      SettingsGlobalValues.negativeColor.withValues(alpha: .8),
                 ),
                 child: const Text(
                   "Validate",
@@ -132,7 +132,7 @@ class SettingsPageState extends State<SettingsPage> {
         ),
         Switch(
           value: setting.settingValue,
-          activeColor: SettingsGlobalValues.positiveColor,
+          activeThumbColor: SettingsGlobalValues.positiveColor,
           inactiveThumbColor: SettingsGlobalValues.negativeColor,
           onChanged: (value) {
             setState(() {
@@ -163,7 +163,7 @@ class SettingsPageState extends State<SettingsPage> {
           ),
           Switch(
             value: setting.settingValue,
-            activeColor: SettingsGlobalValues.positiveColor,
+            activeThumbColor: SettingsGlobalValues.positiveColor,
             inactiveThumbColor: SettingsGlobalValues.negativeColor,
             onChanged: (value) {
               setState(() {

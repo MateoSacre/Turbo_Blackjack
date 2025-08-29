@@ -77,8 +77,6 @@ enum Color {
         return '♠';
       case Color.clubs:
         return '♣';
-      default:
-        return '';
     }
   }
 }

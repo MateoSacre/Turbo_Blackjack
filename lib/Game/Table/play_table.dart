@@ -70,7 +70,8 @@ class PlayTableState extends State<PlayTable> {
           borderRadius: BorderRadius.circular(8),
         ),
         child: Center(
-          child: Text(text, style: const TextStyle(color: SettingsGlobalValues.neutralColor)),
+          child: Text(text,
+              style: const TextStyle(color: SettingsGlobalValues.neutralColor)),
         ),
       ),
     );
@@ -99,8 +100,15 @@ class PlayTableState extends State<PlayTable> {
         child: Center(
           child: Column(
             children: [
-              Expanded(child: Text(hand.getCardsValues().join(' '), style: const TextStyle(color: SettingsGlobalValues.neutralColor),)),
-              Text(hand.getValue() == 0 ? '' : hand.getValue().toString(), style: const TextStyle(color: SettingsGlobalValues.neutralColor)),
+              Expanded(
+                  child: Text(
+                hand.getCardsValues().join(' '),
+                style:
+                    const TextStyle(color: SettingsGlobalValues.neutralColor),
+              )),
+              Text(hand.getValue() == 0 ? '' : hand.getValue().toString(),
+                  style: const TextStyle(
+                      color: SettingsGlobalValues.neutralColor)),
             ],
           ),
         ),
@@ -146,7 +154,9 @@ class PlayTableState extends State<PlayTable> {
           child: Center(
         child: Wrap(
           alignment: WrapAlignment.center,
-          direction: SettingsGlobalValues.isLandscape(context) ? Axis.vertical : Axis.horizontal,
+          direction: SettingsGlobalValues.isLandscape(context)
+              ? Axis.vertical
+              : Axis.horizontal,
           spacing: SettingsGlobalValues.globalEdgeInset,
           runSpacing: SettingsGlobalValues.globalEdgeInset,
           children: getCards(context),
@@ -157,7 +167,9 @@ class PlayTableState extends State<PlayTable> {
           padding: const EdgeInsets.all(20.0),
           child: Center(
             child: Wrap(
-              direction: SettingsGlobalValues.isLandscape(context) ? Axis.vertical : Axis.horizontal,
+              direction: SettingsGlobalValues.isLandscape(context)
+                  ? Axis.vertical
+                  : Axis.horizontal,
               alignment: WrapAlignment.center,
               spacing: SettingsGlobalValues.globalEdgeInset,
               runSpacing: SettingsGlobalValues.globalEdgeInset,
@@ -352,7 +364,6 @@ class PlayTableState extends State<PlayTable> {
         case VictoryStatus.bust:
           return SettingsGlobalValues.negativeColor;
         case VictoryStatus.empty:
-        default:
           return SettingsGlobalValues.darkColor;
       }
     }
@@ -364,7 +375,8 @@ class PlayTableState extends State<PlayTable> {
     final length = hands.length;
 
     return List.generate(length, (i) {
-      final index = SettingsGlobalValues.isLandscape(context) ? i : length - 1 - i;
+      final index =
+          SettingsGlobalValues.isLandscape(context) ? i : length - 1 - i;
       final hand = hands[index];
 
       return isStarted
@@ -372,5 +384,4 @@ class PlayTableState extends State<PlayTable> {
           : _buildPosition('$i', hand);
     });
   }
-
 }
