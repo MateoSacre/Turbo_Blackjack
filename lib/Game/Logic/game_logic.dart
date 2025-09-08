@@ -43,6 +43,10 @@ class GameLogic {
       }
       hand.cards.clear();
     }
+    for (int i = 0; i < GameValues.nbSplitInGame; i++) {
+      GameValues.player.hands.removeLast();
+    }
+    GameValues.nbSplitInGame = 0;
     SettingsGlobalValues.logger.d(
         "\nDeck of [${GameValues.deck.length}] cards at end of game: ${GameValues.deck.map((c) => c.toString()).join(', ')}");
     SettingsGlobalValues.logger.d(
@@ -60,6 +64,7 @@ class GameLogic {
     GameValues.currentHandIndex++;
     if (GameValues.currentHandIndex < GameValues.player.hands.length) {
       if (GameValues.player.hands[GameValues.currentHandIndex].isSplitted) {
+        GameValues.nbSplitInGame++;
         SettingsGlobalValues.logger
             .d("Splitted hand ${GameValues.currentHandIndex}, hitting");
         hit(GameValues.player.hands[GameValues.currentHandIndex]);

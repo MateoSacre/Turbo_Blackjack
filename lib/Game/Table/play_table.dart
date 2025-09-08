@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:turbo_blackjack/Game/Logic/best_moves.dart';
 import 'package:turbo_blackjack/Game/Logic/deck_logic.dart';
 import 'package:turbo_blackjack/Settings/settings_global_values.dart';
 
@@ -33,6 +35,10 @@ class PlayTableState extends State<PlayTable> {
   @override
   void initState() {
     super.initState();
+
+    BestMoves.fToast = FToast();
+    BestMoves.fToast.init(context);
+    BestMoves.generateMatrix();
 
     _timer = Timer.periodic(
         const Duration(milliseconds: SettingsGlobalValues.tableRefreshTimeMS),
@@ -106,6 +112,13 @@ class PlayTableState extends State<PlayTable> {
                 style:
                     const TextStyle(color: SettingsGlobalValues.neutralColor),
               )),
+              if (SettingsGlobalValues.showBestOption.settingValue &&
+                  GameValues.isGameStarted &&
+                  !GameValues.isGameEnded &&
+                  hand.cards.length >= 2 &&
+                  GameValues.player.hands.indexOf(hand) >=
+                      GameValues.currentHandIndex)
+                Text(BestMoves.getBestOptionForHand(hand)),
               Text(hand.getValue() == 0 ? '' : hand.getValue().toString(),
                   style: const TextStyle(
                       color: SettingsGlobalValues.neutralColor)),
@@ -128,6 +141,12 @@ class PlayTableState extends State<PlayTable> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pushReplacementNamed(context, '/homePage'),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.table_chart_outlined),
+            onPressed: () => BestMoves.showMatrix(context),
+          ),
+        ],
         title: const Text('Turbo Blackjack'),
       ),
       body: SettingsGlobalValues.isLandscape(context)
@@ -207,6 +226,10 @@ class PlayTableState extends State<PlayTable> {
         ElevatedButton(
           onPressed: () {
             setState(() {
+              if (SettingsGlobalValues.showBestOptionAsPopup.settingValue) {
+                BestMoves.displayToast(
+                    BestMoves.getBestOptionTextWidget("HIT"));
+              }
               GameLogic.hit(
                   GameValues.player.hands[GameValues.currentHandIndex]);
             });
@@ -223,6 +246,10 @@ class PlayTableState extends State<PlayTable> {
         ElevatedButton(
           onPressed: () {
             setState(() {
+              if (SettingsGlobalValues.showBestOptionAsPopup.settingValue) {
+                BestMoves.displayToast(
+                    BestMoves.getBestOptionTextWidget("STAND"));
+              }
               GameLogic.stand(
                   GameValues.player.hands[GameValues.currentHandIndex]);
             });
@@ -240,6 +267,10 @@ class PlayTableState extends State<PlayTable> {
           onPressed: () {
             if (GameLogic.isFirstTurnForHand()) {
               setState(() {
+                if (SettingsGlobalValues.showBestOptionAsPopup.settingValue) {
+                  BestMoves.displayToast(
+                      BestMoves.getBestOptionTextWidget("DOUBLE"));
+                }
                 GameLogic.double(
                     GameValues.player.hands[GameValues.currentHandIndex]);
               });
@@ -260,6 +291,10 @@ class PlayTableState extends State<PlayTable> {
           onPressed: () {
             if (GameLogic.isFirstTurnForHand() && GameLogic.canSplit()) {
               setState(() {
+                if (SettingsGlobalValues.showBestOptionAsPopup.settingValue) {
+                  BestMoves.displayToast(
+                      BestMoves.getBestOptionTextWidget("SPLIT"));
+                }
                 GameLogic.split(
                     GameValues.player.hands[GameValues.currentHandIndex]);
               });
@@ -281,6 +316,10 @@ class PlayTableState extends State<PlayTable> {
           onPressed: () {
             if (GameLogic.isFirstTurnForHand()) {
               setState(() {
+                if (SettingsGlobalValues.showBestOptionAsPopup.settingValue) {
+                  BestMoves.displayToast(
+                      BestMoves.getBestOptionTextWidget("SURRENDER"));
+                }
                 GameLogic.surrender(
                     GameValues.player.hands[GameValues.currentHandIndex]);
               });

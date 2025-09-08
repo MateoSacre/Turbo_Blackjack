@@ -113,5 +113,6 @@ class SettingsGlobalValues {
   static const int timeBetweenDrawsMS = 500;
   static const int tableRefreshTimeMS = 50;
 
-  static const int statChartRadius = 3;
+  static const int statChartRadius = 2;
+  static const double statChartSpacing = 50;
 }

@@ -45,6 +45,13 @@ class Card {
     }
   }
 
+  int getTrueValue(){
+    if(value>10){
+      return 10;
+    }
+    return value;
+  }
+
   int getCountValue() {
     if (value < 7) {
       return 1;

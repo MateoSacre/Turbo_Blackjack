@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:turbo_blackjack/Game/Logic/best_moves.dart';
 
 import 'Game/Table/play_table.dart';
 import 'Game/home_page.dart';
@@ -21,6 +22,8 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    BestMoves.generateMatrix();
+
     return MaterialApp(
       title: 'Flutter Demo',
       home: const HomePage(),

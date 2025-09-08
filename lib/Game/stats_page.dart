@@ -15,12 +15,61 @@ class StatsPage extends StatefulWidget {
 
 class _StatsPageState extends State<StatsPage> {
   String selectedOption = '10';
+  int fullStatChartTouchedIndex = -1;
+  int summaryChartTouchedIndex = -1;
   final TextEditingController customController = TextEditingController();
 
   @override
   void dispose() {
     customController.dispose();
     super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final games = _getGames();
+    final stats = _calculateStats(games);
+
+    final selector = _buildSelector();
+    final statSummaryChart = _buildSummaryChart(context, stats);
+    final fullStatChart = _buildResponsiveChart(context, stats);
+
+    return Scaffold(
+      backgroundColor: SettingsGlobalValues.mainColor,
+      appBar: AppBar(
+        backgroundColor: SettingsGlobalValues.mainColor,
+        iconTheme:
+            const IconThemeData(color: SettingsGlobalValues.neutralColor),
+        title: const Text('Stats',
+            style: TextStyle(color: SettingsGlobalValues.neutralColor)),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: SingleChildScrollView(
+          child: Center(
+            // <-- Centre tout le Wrap dans l'espace dispo
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              // Centre les enfants dans la ligne
+              runAlignment: WrapAlignment.center,
+              // Centre les lignes elles-mêmes
+              crossAxisAlignment: WrapCrossAlignment.center,
+              // Aligne sur l'axe secondaire
+              direction: SettingsGlobalValues.isLandscape(context)
+                  ? Axis.horizontal
+                  : Axis.vertical,
+              spacing: SettingsGlobalValues.statChartSpacing,
+              runSpacing: SettingsGlobalValues.statChartSpacing,
+              children: [
+                selector,
+                statSummaryChart,
+                fullStatChart,
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   List<HistoryGame> _getGames() {
@@ -131,190 +180,199 @@ class _StatsPageState extends State<StatsPage> {
     };
   }
 
-  List<PieChartSectionData> _buildChartSections(
-      BuildContext context, Map<String, dynamic> stats) {
-    const textStyle =
-        TextStyle(color: SettingsGlobalValues.neutralColor, fontSize: 12);
-    final double radius =
-        (MediaQuery.of(context).size.width >= MediaQuery.of(context).size.height
-            ? MediaQuery.of(context).size.height
-            : MediaQuery.of(context).size.width) / SettingsGlobalValues.statChartRadius ;
-    SettingsGlobalValues.logger.i("Chart size = $radius");
-    return [
-      PieChartSectionData(
-        color: SettingsGlobalValues.positiveColor,
-        value: stats['win'],
-        title: '${stats['win'].toStringAsFixed(1)}%',
-        titleStyle: textStyle,
-        radius: radius,
-      ),
-      PieChartSectionData(
-        color: SettingsGlobalValues.goldColor,
-        value: stats['blackjack'],
-        title: '${stats['blackjack'].toStringAsFixed(1)}%',
-        titleStyle: textStyle,
-        radius: radius,
-      ),
-      PieChartSectionData(
-        color: SettingsGlobalValues.activeColor,
-        value: stats['draw'],
-        title: '${stats['draw'].toStringAsFixed(1)}%',
-        titleStyle: textStyle,
-        radius: radius,
-      ),
-      PieChartSectionData(
-        color: SettingsGlobalValues.negativeColor.withValues(alpha: .5),
-        value: stats['bust'],
-        title: '${stats['bust'].toStringAsFixed(1)}%',
-        titleStyle: textStyle,
-        radius: radius,
-      ),
-      PieChartSectionData(
-        color: SettingsGlobalValues.negativeColor,
-        value: stats['lost'],
-        title: '${stats['lost'].toStringAsFixed(1)}%',
-        titleStyle: textStyle,
-        radius: radius,
-      ),
-      PieChartSectionData(
-        color: SettingsGlobalValues.orangeColor,
-        value: stats['surrender'],
-        title: '${stats['surrender'].toStringAsFixed(1)}%',
-        titleStyle: textStyle,
-        radius: radius,
-      ),
-    ];
+  List<PieChartSectionData> _buildFullStatsChartSections(
+      double size, Map<String, dynamic> stats) {
+    return List.generate(5, (i) {
+      final isFullStatChartQuarterTouched = i == fullStatChartTouchedIndex;
+      final textStyle = TextStyle(
+          color: SettingsGlobalValues.neutralColor,
+          fontSize: (isFullStatChartQuarterTouched ? 20.0 : 12.0),
+          backgroundColor: isFullStatChartQuarterTouched ? Colors.black : null);
+      final radius = size * (isFullStatChartQuarterTouched ? 1.1 : 1);
+      switch (i) {
+        case 0:
+          return PieChartSectionData(
+            color: SettingsGlobalValues.goldColor,
+            value: stats['blackjack'],
+            title:
+                '${isFullStatChartQuarterTouched ? 'BlackJack :\n' : ''}${stats['blackjack'].toStringAsFixed(1)}%',
+            titleStyle: textStyle,
+            radius: radius,
+          );
+        case 1:
+          return PieChartSectionData(
+            color: SettingsGlobalValues.positiveColor,
+            value: stats['win'],
+            title:
+                '${isFullStatChartQuarterTouched ? 'Win :\n' : ''}${stats['win'].toStringAsFixed(1)}%',
+            titleStyle: textStyle,
+            radius: radius,
+          );
+        case 2:
+          return PieChartSectionData(
+            color: SettingsGlobalValues.activeColor,
+            value: stats['draw'],
+            title:
+                '${isFullStatChartQuarterTouched ? 'Draw :\n' : ''}${stats['draw'].toStringAsFixed(1)}%',
+            titleStyle: textStyle,
+            radius: radius,
+          );
+        case 3:
+          return PieChartSectionData(
+            color: SettingsGlobalValues.negativeColor.withValues(alpha: .5),
+            value: stats['bust'],
+            title:
+                '${isFullStatChartQuarterTouched ? 'Bust :\n' : ''}${stats['bust'].toStringAsFixed(1)}%',
+            titleStyle: textStyle,
+            radius: radius,
+          );
+        case 4:
+          return PieChartSectionData(
+            color: SettingsGlobalValues.negativeColor,
+            value: stats['lost'],
+            title:
+                '${isFullStatChartQuarterTouched ? 'Lost :\n' : ''}${stats['lost'].toStringAsFixed(1)}%',
+            titleStyle: textStyle,
+            radius: radius,
+          );
+        case 5:
+          return PieChartSectionData(
+            color: SettingsGlobalValues.orangeColor,
+            value: stats['surrender'],
+            title:
+                '${isFullStatChartQuarterTouched ? 'Surrender :\n' : ''}${stats['surrender'].toStringAsFixed(1)}%',
+            titleStyle: textStyle,
+            radius: radius,
+          );
+        default:
+          throw Error();
+      }
+    });
+  }
+
+  List<PieChartSectionData> _buildSummaryChartSections(
+      double size, Map<String, dynamic> stats) {
+    return List.generate(3, (i) {
+      final isSummaryChartTouched = i == summaryChartTouchedIndex;
+      final textStyle = TextStyle(
+          color: SettingsGlobalValues.neutralColor,
+          fontSize: (isSummaryChartTouched ? 20.0 : 12.0),
+          backgroundColor: isSummaryChartTouched ? Colors.black : null);
+      final radius = size * (isSummaryChartTouched ? 1.1 : 1);
+      switch (i) {
+        case 0:
+          return PieChartSectionData(
+            color: SettingsGlobalValues.positiveColor,
+            value: stats['playerWin'],
+            title:
+                '${isSummaryChartTouched ? 'Win :\n' : ''}${stats['win'].toStringAsFixed(1)}%',
+            titleStyle: textStyle,
+            radius: radius,
+          );
+        case 1:
+          return PieChartSectionData(
+            color: SettingsGlobalValues.negativeColor,
+            value: stats['playerLost'],
+            title:
+                '${isSummaryChartTouched ? 'Draw :\n' : ''}${stats['draw'].toStringAsFixed(1)}%',
+            titleStyle: textStyle,
+            radius: radius,
+          );
+        case 2:
+          return PieChartSectionData(
+            color: SettingsGlobalValues.activeColor,
+            value: stats['draw'],
+            title:
+                '${isSummaryChartTouched ? 'Lost :\n' : ''}${stats['lost'].toStringAsFixed(1)}%',
+            titleStyle: textStyle,
+            radius: radius,
+          );
+        default:
+          throw Error();
+      }
+    });
   }
 
   Widget _buildResponsiveChart(
       BuildContext context, Map<String, dynamic> stats) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final size = constraints.maxWidth;
-        SettingsGlobalValues.logger.i("Chart size = $size");
-
+        final size = (MediaQuery.of(context).size.width >=
+                    MediaQuery.of(context).size.height
+                ? MediaQuery.of(context).size.height
+                : MediaQuery.of(context).size.width) /
+            SettingsGlobalValues.statChartRadius;
         return SizedBox(
           width: size,
           height: size,
           child: PieChart(
             PieChartData(
-              sections: _buildChartSections(context, stats),
-              borderData: FlBorderData(show: false),
-              sectionsSpace: 0,
-              centerSpaceRadius: 0,
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildSummaryChart(
-      BuildContext context, Map<String, dynamic> stats) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final size = constraints.maxWidth;
-        const textStyle =
-            TextStyle(color: SettingsGlobalValues.neutralColor, fontSize: 12);
-        final radius =
-            size / SettingsGlobalValues.statChartRadius;
-        return SizedBox(
-          width: size,
-          height: size,
-          child: PieChart(
-            PieChartData(
-              sections: [
-                PieChartSectionData(
-                  color: SettingsGlobalValues.positiveColor,
-                  value: stats['playerWin'],
-                  title: '${stats['playerWin'].toStringAsFixed(1)}%',
-                  titleStyle: textStyle,
-                  radius: radius,
-                ),
-                PieChartSectionData(
-                  color: SettingsGlobalValues.negativeColor,
-                  value: stats['playerLost'],
-                  title: '${stats['playerLost'].toStringAsFixed(1)}%',
-                  titleStyle: textStyle,
-                  radius: radius,
-                ),
-                PieChartSectionData(
-                  color: SettingsGlobalValues.activeColor,
-                  value: stats['draw'],
-                  title: '${stats['draw'].toStringAsFixed(1)}%',
-                  titleStyle: textStyle,
-                  radius: radius,
-                ),
-              ],
-              borderData: FlBorderData(show: false),
-              sectionsSpace: 0,
-              centerSpaceRadius: 0,
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildCardBarChart(
-      Map<int, int> data, Color color) {
-    final barGroups = data.entries
-        .map((e) => BarChartGroupData(x: e.key, barRods: [
-              BarChartRodData(toY: e.value.toDouble(), color: color)
-            ]))
-        .toList();
-    return SizedBox(
-      height: 200,
-      child: BarChart(
-        BarChartData(
-          barGroups: barGroups,
-          borderData: FlBorderData(show: false),
-          gridData: FlGridData(show: false),
-          titlesData: FlTitlesData(
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                getTitlesWidget: (value, meta) {
-                  String text;
-                  switch (value.toInt()) {
-                    case 1:
-                      text = 'A';
-                      break;
-                    case 11:
-                      text = 'J';
-                      break;
-                    case 12:
-                      text = 'Q';
-                      break;
-                    case 13:
-                      text = 'K';
-                      break;
-                    default:
-                      text = value.toInt().toString();
-                  }
-                  return Text(text,
-                      style: const TextStyle(
-                          color: SettingsGlobalValues.neutralColor,
-                          fontSize: 10));
+              pieTouchData: PieTouchData(
+                touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                  setState(() {
+                    if (!event.isInterestedForInteractions ||
+                        pieTouchResponse == null ||
+                        pieTouchResponse.touchedSection == null) {
+                      fullStatChartTouchedIndex = -1;
+                      return;
+                    }
+                    fullStatChartTouchedIndex =
+                        pieTouchResponse.touchedSection!.touchedSectionIndex;
+                  });
                 },
               ),
+              sections: _buildFullStatsChartSections(size / 2, stats),
+              borderData: FlBorderData(show: false),
+              sectionsSpace: 0,
+              centerSpaceRadius: 0,
             ),
-            leftTitles:
-                AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final games = _getGames();
-    final stats = _calculateStats(games);
+  Widget _buildSummaryChart(BuildContext context, Map<String, dynamic> stats) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final size = (MediaQuery.of(context).size.width >=
+                    MediaQuery.of(context).size.height
+                ? MediaQuery.of(context).size.height
+                : MediaQuery.of(context).size.width) /
+            SettingsGlobalValues.statChartRadius;
+        return SizedBox(
+          width: size,
+          height: size,
+          child: PieChart(
+            PieChartData(
+              pieTouchData: PieTouchData(
+                touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                  setState(() {
+                    if (!event.isInterestedForInteractions ||
+                        pieTouchResponse == null ||
+                        pieTouchResponse.touchedSection == null) {
+                      summaryChartTouchedIndex = -1;
+                      return;
+                    }
+                    summaryChartTouchedIndex =
+                        pieTouchResponse.touchedSection!.touchedSectionIndex;
+                  });
+                },
+              ),
+              sections: _buildSummaryChartSections(size / 2, stats),
+              borderData: FlBorderData(show: false),
+              sectionsSpace: 0,
+              centerSpaceRadius: 0,
+            ),
+          ),
+        );
+      },
+    );
+  }
 
-    final selector = Row(
+  _buildSelector() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         const Text(
           'Games:',
@@ -360,7 +418,7 @@ class _StatsPageState extends State<StatsPage> {
             selectedOption = value ?? '10';
           }),
         ),
-        const SizedBox(width: 10),
+        if (selectedOption == 'Custom') const SizedBox(width: 10),
         if (selectedOption == 'Custom')
           SizedBox(
             width: 80,
@@ -376,45 +434,6 @@ class _StatsPageState extends State<StatsPage> {
             ),
           ),
       ],
-    );
-
-    final chart = _buildResponsiveChart(context, stats);
-    final summary = _buildSummaryChart(context, stats);
-    final winCardChart = _buildCardBarChart(
-        Map<int, int>.from(stats['cardWinCount']),
-        SettingsGlobalValues.positiveColor);
-    final cardCountChart = _buildCardBarChart(
-        Map<int, int>.from(stats['cardCount']),
-        SettingsGlobalValues.activeColor);
-
-    return Scaffold(
-      backgroundColor: SettingsGlobalValues.mainColor,
-      appBar: AppBar(
-        backgroundColor: SettingsGlobalValues.mainColor,
-        iconTheme:
-            const IconThemeData(color: SettingsGlobalValues.neutralColor),
-        title: const Text('Stats',
-            style: TextStyle(color: SettingsGlobalValues.neutralColor)),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              selector,
-              const SizedBox(height: 20),
-              chart,
-              const SizedBox(height: 20),
-              summary,
-              const SizedBox(height: 20),
-              winCardChart,
-              const SizedBox(height: 20),
-              cardCountChart,
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

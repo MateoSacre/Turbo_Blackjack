@@ -228,7 +228,7 @@ class DeckLogic {
 
       // Log avant insertion
       SettingsGlobalValues.logger.t(
-          "shuffleWithShuffler[card=${card.getCardValue()},value=${card.value},countValue=${card.getCountValue()},"
+          "shuffleWithShuffler[card=${card.getCardValue()},value=${card.getTrueValue()},countValue=${card.getCountValue()},"
           "pileIndex=$targetPileIndex,pileCountBefore=$beforeCount,pileCountAfter=${beforeCount + card.getCountValue()}]");
 
       // Insertion: here in the middle of the pile (kept)

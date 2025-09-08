@@ -13,6 +13,10 @@ class GameValues {
   static bool isGameEnded = false;
 
   static int currentHandIndex = -1;
+  static int nbSplitInGame = 0;
+
+  static Map<String, String> matrix = {};
+
 }
 
 class Player {
@@ -37,11 +41,11 @@ class Hand {
     bool wasAceUsed = false;
 
     for (Card card in cards) {
-      if (card.value == 1) {
+      if (card.getTrueValue() == 1) {
         hasAce = true;
         result += 11;
       } else {
-        result += (card.value >= 10 ? 10 : card.value);
+        result += card.getTrueValue();
       }
     }
 
