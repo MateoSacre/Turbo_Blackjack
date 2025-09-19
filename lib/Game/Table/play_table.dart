@@ -67,8 +67,8 @@ class PlayTableState extends State<PlayTable> {
                 }
               : null,
       child: Container(
-        width: SettingsGlobalValues.playerCardWidth,
-        height: SettingsGlobalValues.playerCardHeight,
+        width: SettingsGlobalValues.getCardWidth(context),
+        height: SettingsGlobalValues.getCardHeight(context),
         decoration: BoxDecoration(
           color: hand.isPlayed
               ? SettingsGlobalValues.positiveColor
@@ -86,8 +86,8 @@ class PlayTableState extends State<PlayTable> {
   Widget _buildPositionFromHand(Hand hand) {
     return GestureDetector(
       child: Container(
-        width: SettingsGlobalValues.playerCardWidth,
-        height: SettingsGlobalValues.playerCardHeight,
+        width: SettingsGlobalValues.getCardWidth(context),
+        height: SettingsGlobalValues.getCardHeight(context),
         decoration: BoxDecoration(
           color: getHandColor(hand),
           borderRadius: BorderRadius.circular(8),
@@ -109,8 +109,9 @@ class PlayTableState extends State<PlayTable> {
               Expanded(
                   child: Text(
                 hand.getCardsValues().join(' '),
-                style:
-                    const TextStyle(color: SettingsGlobalValues.neutralColor),
+                style: TextStyle(
+                    color: SettingsGlobalValues.neutralColor,
+                    fontSize: SettingsGlobalValues.getFontSize(context)),
               )),
               if (SettingsGlobalValues.showBestOption.settingValue &&
                   GameValues.isGameStarted &&
@@ -118,10 +119,27 @@ class PlayTableState extends State<PlayTable> {
                   hand.cards.length >= 2 &&
                   GameValues.player.hands.indexOf(hand) >=
                       GameValues.currentHandIndex)
-                Text(BestMoves.getBestOptionForHand(hand)),
-              Text(hand.getValue() == 0 ? '' : hand.getValue().toString(),
-                  style: const TextStyle(
-                      color: SettingsGlobalValues.neutralColor)),
+                Text(
+                  BestMoves.getBestOptionForHand(hand),
+                  style: TextStyle(
+                      color: SettingsGlobalValues.neutralColor,
+                      fontSize: SettingsGlobalValues.getFontSize(context)),
+                ),
+              if (GameValues.isGameStarted &&
+                  !GameValues.isGameEnded &&
+                  GameValues.dealerHand == hand)
+                Text(
+                  "Dealer",
+                  style: TextStyle(
+                      color: SettingsGlobalValues.neutralColor,
+                      fontSize: SettingsGlobalValues.getFontSize(context)),
+                ),
+              Text(
+                hand.getValue() == 0 ? '' : hand.getValue().toString(),
+                style: TextStyle(
+                    color: SettingsGlobalValues.neutralColor,
+                    fontSize: SettingsGlobalValues.getFontSize(context)),
+              ),
             ],
           ),
         ),
@@ -163,7 +181,7 @@ class PlayTableState extends State<PlayTable> {
     return [
       // Dealer position
       Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(40.0),
         child: GameValues.isGameStarted
             ? _buildPositionFromHand(GameValues.dealerHand)
             : _buildPosition("D", Hand()),

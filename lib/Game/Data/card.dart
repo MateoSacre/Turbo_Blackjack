@@ -16,20 +16,6 @@ class Card {
     return Card(json['value'], Color.values[json['color']]);
   }
 
-  Widget toWidget(String text) {
-    return Container(
-      width: SettingsGlobalValues.playerCardWidth,
-      height: SettingsGlobalValues.playerCardHeight,
-      decoration: BoxDecoration(
-        color: SettingsGlobalValues.neutralColor,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Center(
-        child: Text(text),
-      ),
-    );
-  }
-
   getCardValue() {
     switch (value) {
       case 1:
