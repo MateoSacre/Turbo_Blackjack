@@ -85,6 +85,24 @@ class SettingsGlobalValues {
     return width > height;
   }
 
+  static isBigScreen(BuildContext context) {
+    double width = MediaQuery.sizeOf(context).width;
+    double height = MediaQuery.sizeOf(context).height;
+    return (width > height ? width : height) >= 1000;
+  }
+
+  static getCardHeight(BuildContext context) {
+    return isBigScreen(context) ? playerCardHeightBig : playerCardHeightSmall;
+  }
+
+  static getCardWidth(BuildContext context) {
+    return isBigScreen(context) ? playerCardWidthBig : playerCardWidthSmall;
+  }
+
+  static getFontSize(BuildContext context) {
+    return isBigScreen(context) ? bigFont : smallFont;
+  }
+
   static const Color mainColor = Color(0xFF251228);
   static const Color secondColor = Color(0xFF475B63);
   static const Color positiveColor = Color(0xFF339C29);
@@ -96,8 +114,10 @@ class SettingsGlobalValues {
   static const Color darkColor = Color(0xff000000);
 
   static const double globalEdgeInset = 10;
-  static const double playerCardWidth = 75;
-  static const double playerCardHeight = 110;
+  static const double playerCardWidthSmall = 75;
+  static const double playerCardHeightSmall = 110;
+  static const double playerCardWidthBig = 200;
+  static const double playerCardHeightBig = 293;
   static const double addHandButtonWidth = 100;
   static const double addHandButtonHeight = 40;
   static const double cardBorderWidth = 4;
@@ -107,7 +127,7 @@ class SettingsGlobalValues {
   static const double toastPosition = 50;
 
   static const double mainScreenFont = 100;
-  static const double mainFont = 16;
+  static const double bigFont = 28;
   static const double smallFont = 12;
 
   static const int timeBetweenDrawsMS = 500;

@@ -1,7 +1,3 @@
-import 'package:flutter/cupertino.dart';
-
-import '../../Settings/settings_global_values.dart';
-
 class Card {
   final int value;
   final Color color;
@@ -14,20 +10,6 @@ class Card {
 
   static Card fromJson(Map<String, dynamic> json) {
     return Card(json['value'], Color.values[json['color']]);
-  }
-
-  Widget toWidget(String text) {
-    return Container(
-      width: SettingsGlobalValues.playerCardWidth,
-      height: SettingsGlobalValues.playerCardHeight,
-      decoration: BoxDecoration(
-        color: SettingsGlobalValues.neutralColor,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Center(
-        child: Text(text),
-      ),
-    );
   }
 
   getCardValue() {
@@ -45,8 +27,8 @@ class Card {
     }
   }
 
-  int getTrueValue(){
-    if(value>10){
+  int getTrueValue() {
+    if (value > 10) {
       return 10;
     }
     return value;
