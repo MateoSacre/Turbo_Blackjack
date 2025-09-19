@@ -42,8 +42,22 @@ class HistoryPage extends StatelessWidget {
                   Text(
                       'Dealer $dealerValue: ${game.dealerHand.getValue()} - ${game.dealerHand.getCardsValues().join(', ')}'),
                   for (int i = 0; i < game.playerHands.length; i++)
-                    Text(
-                        'Hand ${i + 1} (${game.playerHands[i].victoryStatus.name}): ${game.playerHands[i].getValue()} - ${game.playerHands[i].getCardsValues().join(', ')}'),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                            'Hand ${i + 1} (${game.playerHands[i].victoryStatus.name}): ${game.playerHands[i].getValue()} - ${game.playerHands[i].getCardsValues().join(', ')}'),
+                        Builder(builder: (context) {
+                          final hand = game.playerHands[i];
+                          final totalReturn = hand.payout + hand.insurancePayout;
+                          final net =
+                              totalReturn - hand.bet - hand.insuranceBet;
+                          return Text(
+                            '  Bet: ${hand.bet} | Insurance: ${hand.insuranceBet} | Return: $totalReturn | Net: $net',
+                          );
+                        }),
+                      ],
+                    ),
                 ],
               ),
             ),

@@ -1,4 +1,4 @@
-import 'package:turbo_blackjack/Game/Data/Card.dart';
+import 'package:turbo_blackjack/Game/Data/card.dart';
 
 import '../game_values.dart';
 

@@ -2,7 +2,7 @@ import 'package:turbo_blackjack/Game/Data/History/history_game.dart';
 import 'package:turbo_blackjack/Game/Data/History/history_manager.dart';
 
 import '../../Settings/settings_global_values.dart';
-import '../Data/Card.dart';
+import '../Data/card.dart';
 import '../Data/History/history_hand.dart';
 import '../Data/game_values.dart';
 import 'deck_logic.dart';
@@ -18,8 +18,45 @@ enum VictoryStatus {
 }
 
 class GameLogic {
-  static startNewGame() async {
+  static Future<void> startNewGame() async {
+    if (GameValues.player.hands.isEmpty) {
+      SettingsGlobalValues.logger
+          .w('Attempted to start a game without any active hands.');
+      return;
+    }
+
+    final totalBet = GameValues.totalBet;
+    if (totalBet <= 0) {
+      SettingsGlobalValues.logger
+          .w('Cannot start a game without placing at least one bet.');
+      return;
+    }
+
+    if (totalBet > GameValues.playerTokens) {
+      SettingsGlobalValues.logger
+          .w('Not enough tokens to cover the current bets.');
+      return;
+    }
+
+    if (GameValues.player.hands.any((hand) => hand.bet <= 0)) {
+      SettingsGlobalValues.logger
+          .w('Each active hand must have a bet before starting the game.');
+      return;
+    }
+
     GameValues.isGameStarted = true;
+    GameValues.isGameEnded = false;
+    GameValues.waitingForInsuranceDecision = false;
+    GameValues.nbSplitInGame = 0;
+    GameValues.currentHandIndex = -1;
+
+    GameValues.dealerHand.resetRoundState();
+    for (Hand hand in GameValues.player.hands) {
+      hand.resetRoundState();
+    }
+
+    GameValues.playerTokens -= totalBet;
+
     for (Hand hand in GameValues.player.hands) {
       hand.cards.add(await DeckLogic.drawCard());
     }
@@ -27,21 +64,32 @@ class GameLogic {
     for (Hand hand in GameValues.player.hands) {
       hand.cards.add(await DeckLogic.drawCard());
     }
-    nextHandOrEnd();
+
+    if (GameValues.dealerHand.cards.isNotEmpty &&
+        GameValues.dealerHand.cards.first.getTrueValue() == 1) {
+      GameValues.waitingForInsuranceDecision = true;
+      SettingsGlobalValues.logger.d(
+          'Dealer shows an Ace. Waiting for insurance decisions.');
+      return;
+    }
+
+    await nextHandOrEnd();
   }
 
   static Future<void> endGame() async {
     GameValues.isGameStarted = false;
     GameValues.isGameEnded = false;
+    GameValues.waitingForInsuranceDecision = false;
+    GameValues.currentHandIndex = -1;
     for (Card card in GameValues.dealerHand.cards) {
       GameValues.discardPile.add(card);
     }
-    GameValues.dealerHand.cards.clear();
+    GameValues.dealerHand.resetRoundState();
     for (Hand hand in GameValues.player.hands) {
       for (Card card in hand.cards) {
         GameValues.discardPile.add(card);
       }
-      hand.cards.clear();
+      hand.resetRoundState();
     }
     for (int i = 0; i < GameValues.nbSplitInGame; i++) {
       GameValues.player.hands.removeLast();
@@ -59,6 +107,11 @@ class GameLogic {
   }
 
   static Future<void> nextHandOrEnd() async {
+    if (GameValues.waitingForInsuranceDecision) {
+      SettingsGlobalValues.logger.d(
+          'Awaiting insurance decisions before moving to the next hand.');
+      return;
+    }
     SettingsGlobalValues.logger.d(
         "Changing from hand [${GameValues.currentHandIndex}] to [${GameValues.currentHandIndex + 1}]");
     GameValues.currentHandIndex++;
@@ -120,7 +173,28 @@ class GameLogic {
         GameValues.player.hands[GameValues.currentHandIndex].cards.length <= 2;
   }
 
-  static double(Hand hand) async {
+  static bool canDoubleCurrentHand() {
+    if (!isFirstTurnForHand()) {
+      return false;
+    }
+    final Hand hand = GameValues.player.hands[GameValues.currentHandIndex];
+    if (hand.cards.length != 2) {
+      return false;
+    }
+    if (hand.bet <= 0) {
+      return false;
+    }
+    return GameValues.playerTokens >= hand.bet;
+  }
+
+  static Future<void> double(Hand hand) async {
+    if (!canDoubleCurrentHand()) {
+      SettingsGlobalValues.logger
+          .d('Double down refused: requirements are not met.');
+      return;
+    }
+    GameValues.playerTokens -= hand.bet;
+    hand.bet *= 2;
     hand.cards.add(await DeckLogic.drawCard());
     int handValue = hand.getValue();
     if (handValue > 21) {
@@ -146,28 +220,51 @@ class GameLogic {
   }
 
   static bool canSplit() {
-    return isFirstTurnForHand() &&
-        GameValues.player.hands[GameValues.currentHandIndex].cards.every(
-            (card) =>
-                card.value ==
-                GameValues.player.hands[GameValues.currentHandIndex].cards.first
-                    .value);
+    if (!isFirstTurnForHand()) {
+      return false;
+    }
+    final Hand hand = GameValues.player.hands[GameValues.currentHandIndex];
+    if (hand.cards.length != 2) {
+      return false;
+    }
+    if (!hand.cards.every((card) => card.value == hand.cards.first.value)) {
+      return false;
+    }
+    if (hand.bet <= 0) {
+      return false;
+    }
+    return GameValues.playerTokens >= hand.bet;
   }
 
   static split(Hand hand) {
     if (GameValues.currentHandIndex == -1) {
       throw Exception("Current hand is -1 but should exist to split !");
     } else {
+      if (GameValues.playerTokens < hand.bet) {
+        SettingsGlobalValues.logger
+            .d('Split refused: not enough tokens remaining.');
+        return;
+      }
+      GameValues.playerTokens -= hand.bet;
       Hand splittedHand = Hand();
       splittedHand.isSplitted = true;
       splittedHand.isPlayed = true;
       splittedHand.cards.add(hand.cards.removeAt(1));
+      splittedHand.bet = hand.bet;
       SettingsGlobalValues.logger.d(
           "Adding one hand from split at index [${GameValues.currentHandIndex + 1}]");
       GameValues.player.hands
           .insert(GameValues.currentHandIndex + 1, splittedHand);
       return hit(hand);
     }
+  }
+
+  static Future<void> resolveInsurancePhase() async {
+    if (!GameValues.waitingForInsuranceDecision) {
+      return;
+    }
+    GameValues.waitingForInsuranceDecision = false;
+    await nextHandOrEnd();
   }
 
   static createHands() {
@@ -200,9 +297,12 @@ class GameLogic {
         historyHand.cards.add(card);
       }
       historyHand.isSurrender = hand.isSurrender;
+      historyHand.bet = hand.bet;
+      historyHand.insuranceBet = hand.insuranceBet;
       historyGame.playerHands.add(historyHand);
     }
     historyGame.updateStats();
+    settleBets(historyGame);
     await HistoryManager.addGame(historyGame);
   }
 
@@ -243,10 +343,62 @@ class GameLogic {
     }
   }
 
+  static void settleBets(HistoryGame historyGame) {
+    final bool dealerBlackjack = GameValues.dealerHand.getValue() == 21 &&
+        GameValues.dealerHand.cards.length == 2;
+
+    for (int i = 0; i < historyGame.playerHands.length; i++) {
+      final HistoryHand historyHand = historyGame.playerHands[i];
+      final Hand hand = GameValues.player.hands[i];
+
+      int payout = 0;
+      switch (historyHand.victoryStatus) {
+        case VictoryStatus.win:
+          payout = hand.bet * 2;
+          break;
+        case VictoryStatus.blackJack:
+          payout = hand.bet + (hand.bet * 3 ~/ 2);
+          break;
+        case VictoryStatus.draw:
+          payout = hand.bet;
+          break;
+        case VictoryStatus.surrender:
+          payout = hand.bet ~/ 2;
+          break;
+        case VictoryStatus.lost:
+        case VictoryStatus.bust:
+        case VictoryStatus.empty:
+          payout = 0;
+          break;
+      }
+
+      historyHand.payout = payout;
+      GameValues.playerTokens += payout;
+
+      int insurancePayout = 0;
+      if (hand.insuranceBet > 0) {
+        if (dealerBlackjack) {
+          insurancePayout = hand.insuranceBet * 3;
+        }
+      }
+      historyHand.insurancePayout = insurancePayout;
+      GameValues.playerTokens += insurancePayout;
+
+      hand.insuranceBet = 0;
+    }
+
+    if (GameValues.playerTokens <= 0) {
+      GameValues.bankruptcyCount++;
+      GameValues.playerTokens = SettingsGlobalValues.bankruptcyResetTokens;
+    }
+  }
+
   static resetAll() {
     DeckLogic.resetDeck();
     GameValues.player.hands.clear();
     GameValues.dealerHand.cards.clear();
     GameValues.handsToPlay.clear();
+    GameValues.waitingForInsuranceDecision = false;
+    GameValues.currentHandIndex = -1;
   }
 }

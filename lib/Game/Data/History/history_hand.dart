@@ -1,10 +1,12 @@
 import '../../Logic/game_logic.dart';
-import '../Card.dart';
+import '../card.dart';
 import '../game_values.dart';
 
 class HistoryHand extends Hand {
   VictoryStatus victoryStatus = VictoryStatus.lost;
   bool isDealer = false;
+  int payout = 0;
+  int insurancePayout = 0;
 
   Map<String, dynamic> toJson() {
     return {
@@ -14,6 +16,10 @@ class HistoryHand extends Hand {
       'isSurrender': isSurrender,
       'victoryStatus': victoryStatus.name,
       'isDealer': isDealer,
+      'bet': bet,
+      'insuranceBet': insuranceBet,
+      'payout': payout,
+      'insurancePayout': insurancePayout,
     };
   }
 
@@ -26,6 +32,10 @@ class HistoryHand extends Hand {
     hand.victoryStatus =
         VictoryStatus.values.byName(json['victoryStatus'] as String);
     hand.isDealer = json['isDealer'] ?? false;
+    hand.bet = json['bet'] ?? 0;
+    hand.insuranceBet = json['insuranceBet'] ?? 0;
+    hand.payout = json['payout'] ?? 0;
+    hand.insurancePayout = json['insurancePayout'] ?? 0;
     return hand;
   }
 }

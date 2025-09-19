@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../Settings/settings_global_values.dart';
 import 'Data/History/history_game.dart';
 import 'Data/History/history_manager.dart';
+import 'Data/game_values.dart';
 import 'Logic/game_logic.dart';
 
 class StatsPage extends StatefulWidget {
@@ -31,6 +32,7 @@ class _StatsPageState extends State<StatsPage> {
     final stats = _calculateStats(games);
 
     final selector = _buildSelector();
+    final bankrollSummary = _buildBankrollSummary();
     final statSummaryChart = _buildSummaryChart(context, stats);
     final fullStatChart = _buildResponsiveChart(context, stats);
 
@@ -61,6 +63,7 @@ class _StatsPageState extends State<StatsPage> {
               spacing: SettingsGlobalValues.statChartSpacing,
               runSpacing: SettingsGlobalValues.statChartSpacing,
               children: [
+                bankrollSummary,
                 selector,
                 statSummaryChart,
                 fullStatChart,
@@ -86,6 +89,29 @@ class _StatsPageState extends State<StatsPage> {
     int start = history.length - count;
     if (start < 0) start = 0;
     return history.sublist(start);
+  }
+
+  Widget _buildBankrollSummary() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: SettingsGlobalValues.secondColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Current tokens: ${GameValues.playerTokens}',
+            style: const TextStyle(color: SettingsGlobalValues.neutralColor),
+          ),
+          Text(
+            'Bankruptcies: ${GameValues.bankruptcyCount}',
+            style: const TextStyle(color: SettingsGlobalValues.neutralColor),
+          ),
+        ],
+      ),
+    );
   }
 
   Map<String, dynamic> _calculateStats(List<HistoryGame> games) {

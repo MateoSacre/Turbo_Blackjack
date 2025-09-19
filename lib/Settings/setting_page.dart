@@ -25,6 +25,8 @@ class SettingsPageState extends State<SettingsPage> {
           SettingsGlobalValues.showBestOption));
       result.addAll(getOptionSlider(SettingsGlobalValues.deckCount));
       result.addAll(getOptionSlider(SettingsGlobalValues.maxHands));
+      result.addAll(getOptionSliderWithValues(
+          SettingsGlobalValues.startingTokens, 10, 500, 49));
       result.addAll(getOptionBoolean(SettingsGlobalValues.useShuffler));
     });
     return result;
@@ -109,7 +111,7 @@ class SettingsPageState extends State<SettingsPage> {
       label: setting.settingValue.toString(),
       onChanged: (value) {
         setState(() {
-          setting.settingValue = value.toInt();
+          setting.settingValue = value.round();
           isReloadNeeded = isReloadNeeded || setting.doesChangeNeedReload;
         });
       },

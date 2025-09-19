@@ -55,11 +55,16 @@ class PlayTableState extends State<PlayTable> {
                   setState(() {
                     hand.isPlayed = !hand.isPlayed;
                     if (hand.isPlayed) {
-                      GameValues.player.hands.add(hand);
+                      if (!GameValues.player.hands.contains(hand)) {
+                        GameValues.player.hands.add(hand);
+                      }
                       SettingsGlobalValues.logger.d(
                           "Added hand $text to Player[${GameValues.player.hands}]");
                     } else {
                       GameValues.player.hands.remove(hand);
+                      GameValues.playerTokens += hand.insuranceBet;
+                      hand.bet = 0;
+                      hand.insuranceBet = 0;
                       SettingsGlobalValues.logger.d(
                           "Removed hand $text to Player[${GameValues.player.hands}]");
                     }
@@ -134,6 +139,23 @@ class PlayTableState extends State<PlayTable> {
                       color: SettingsGlobalValues.neutralColor,
                       fontSize: SettingsGlobalValues.getFontSize(context)),
                 ),
+              if (GameValues.isGameStarted &&
+                  GameValues.dealerHand != hand)
+                Text(
+                  'Bet: ${hand.bet}',
+                  style: TextStyle(
+                      color: SettingsGlobalValues.neutralColor,
+                      fontSize: SettingsGlobalValues.getFontSize(context)),
+                ),
+              if (GameValues.isGameStarted &&
+                  GameValues.dealerHand != hand &&
+                  hand.insuranceBet > 0)
+                Text(
+                  'Ins: ${hand.insuranceBet}',
+                  style: TextStyle(
+                      color: SettingsGlobalValues.neutralColor,
+                      fontSize: SettingsGlobalValues.getFontSize(context)),
+                ),
               Text(
                 hand.getValue() == 0 ? '' : hand.getValue().toString(),
                 style: TextStyle(
@@ -143,6 +165,157 @@ class PlayTableState extends State<PlayTable> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildTokensSummary() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: SettingsGlobalValues.secondColor,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Tokens: ${GameValues.playerTokens}',
+            style: const TextStyle(color: SettingsGlobalValues.neutralColor),
+          ),
+          Text(
+            'Bankruptcies: ${GameValues.bankruptcyCount}',
+            style: const TextStyle(color: SettingsGlobalValues.neutralColor),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Hand> _selectedHandsPreGame() {
+    return GameValues.handsToPlay.where((hand) => hand.isPlayed).toList();
+  }
+
+  int _computeTotalBet() {
+    return _selectedHandsPreGame().fold<int>(0, (sum, hand) => sum + hand.bet);
+  }
+
+  Widget _buildBetControl(Hand hand, int displayIndex) {
+    final bool canDecrease = hand.bet > 0;
+    final bool canIncrease = _computeTotalBet() < GameValues.playerTokens;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: SettingsGlobalValues.secondColor,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Hand $displayIndex bet',
+            style: const TextStyle(color: SettingsGlobalValues.neutralColor),
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                onPressed: canDecrease
+                    ? () {
+                        setState(() {
+                          hand.bet--;
+                        });
+                      }
+                    : null,
+                icon: const Icon(Icons.remove),
+                color: SettingsGlobalValues.neutralColor,
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Text(
+                  '${hand.bet}',
+                  style:
+                      const TextStyle(color: SettingsGlobalValues.neutralColor),
+                ),
+              ),
+              IconButton(
+                onPressed: canIncrease
+                    ? () {
+                        setState(() {
+                          hand.bet++;
+                        });
+                      }
+                    : null,
+                icon: const Icon(Icons.add),
+                color: SettingsGlobalValues.neutralColor,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInsuranceControl(Hand hand, int displayIndex) {
+    final int maxInsurance = hand.bet ~/ 2;
+    final bool canDecrease = hand.insuranceBet > 0;
+    final bool canIncrease =
+        GameValues.playerTokens > 0 && hand.insuranceBet < maxInsurance;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: SettingsGlobalValues.secondColor,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Hand $displayIndex insurance (max $maxInsurance)',
+            style: const TextStyle(color: SettingsGlobalValues.neutralColor),
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                onPressed: canDecrease
+                    ? () {
+                        setState(() {
+                          hand.insuranceBet--;
+                          GameValues.playerTokens++;
+                        });
+                      }
+                    : null,
+                icon: const Icon(Icons.remove),
+                color: SettingsGlobalValues.neutralColor,
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Text(
+                  '${hand.insuranceBet}',
+                  style:
+                      const TextStyle(color: SettingsGlobalValues.neutralColor),
+                ),
+              ),
+              IconButton(
+                onPressed: canIncrease
+                    ? () {
+                        setState(() {
+                          hand.insuranceBet++;
+                          GameValues.playerTokens--;
+                        });
+                      }
+                    : null,
+                icon: const Icon(Icons.add),
+                color: SettingsGlobalValues.neutralColor,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -216,147 +389,233 @@ class PlayTableState extends State<PlayTable> {
     ];
   }
 
-  getButtons() {
-    if (!GameValues.isGameEnded && !GameValues.isGameStarted) {
-      bool hasHands = GameValues.player.hands.isNotEmpty;
-      return [
-        ElevatedButton(
-          onPressed: () {
-            setState(() {
-              if (hasHands) GameLogic.startNewGame();
-            });
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: hasHands
-                ? SettingsGlobalValues.positiveColor
-                : SettingsGlobalValues.secondColor,
-          ),
-          child: const Text(
-            'Start Game',
-            style: TextStyle(color: SettingsGlobalValues.neutralColor),
+  List<Widget> getButtons() {
+    final tokensSummary = _buildTokensSummary();
+
+    if (!GameValues.isGameStarted && !GameValues.isGameEnded) {
+      final selectedHands = _selectedHandsPreGame();
+      final totalBet = _computeTotalBet();
+      final bool hasHands = selectedHands.isNotEmpty;
+      final bool allHandsHaveBet =
+          selectedHands.every((hand) => hand.bet > 0);
+      final bool canStart =
+          hasHands && allHandsHaveBet && totalBet <= GameValues.playerTokens;
+
+      final widgets = <Widget>[tokensSummary];
+
+      if (hasHands) {
+        for (int i = 0; i < selectedHands.length; i++) {
+          widgets.add(_buildBetControl(selectedHands[i], i + 1));
+        }
+      }
+
+      widgets.add(Container(
+        padding: const EdgeInsets.all(8),
+        child: Text(
+          'Total bet: $totalBet',
+          style: TextStyle(
+            color: totalBet > GameValues.playerTokens
+                ? SettingsGlobalValues.negativeColor
+                : SettingsGlobalValues.neutralColor,
           ),
         ),
-      ];
+      ));
+
+      widgets.add(ElevatedButton(
+        onPressed: canStart
+            ? () async {
+                await GameLogic.startNewGame();
+                setState(() {});
+              }
+            : () {
+                final messenger = ScaffoldMessenger.of(context);
+                if (!hasHands) {
+                  messenger.showSnackBar(const SnackBar(
+                      content: Text('Select at least one hand to play.')));
+                } else if (!allHandsHaveBet) {
+                  messenger.showSnackBar(const SnackBar(
+                      content: Text(
+                          'Place a bet on every selected hand to begin.')));
+                } else if (totalBet > GameValues.playerTokens) {
+                  messenger.showSnackBar(const SnackBar(
+                      content: Text('Not enough tokens for these bets.')));
+                }
+              },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: canStart
+              ? SettingsGlobalValues.positiveColor
+              : SettingsGlobalValues.secondColor,
+        ),
+        child: const Text(
+          'Start Game',
+          style: TextStyle(color: SettingsGlobalValues.neutralColor),
+        ),
+      ));
+
+      if (!hasHands) {
+        widgets.add(const Text(
+          'Tap a position to add a hand before starting.',
+          style: TextStyle(color: SettingsGlobalValues.neutralColor),
+        ));
+      }
+
+      return widgets;
     }
+
+    if (GameValues.isGameStarted && GameValues.waitingForInsuranceDecision) {
+      final widgets = <Widget>[tokensSummary];
+      widgets.add(const Padding(
+        padding: EdgeInsets.all(8.0),
+        child: Text(
+          'Dealer shows an Ace. Choose your insurance bets.',
+          style: TextStyle(color: SettingsGlobalValues.neutralColor),
+          textAlign: TextAlign.center,
+        ),
+      ));
+
+      for (int i = 0; i < GameValues.player.hands.length; i++) {
+        widgets.add(_buildInsuranceControl(GameValues.player.hands[i], i + 1));
+      }
+
+      widgets.add(ElevatedButton(
+        onPressed: () async {
+          await GameLogic.resolveInsurancePhase();
+          setState(() {});
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: SettingsGlobalValues.positiveColor,
+        ),
+        child: const Text(
+          'Confirm Insurance',
+          style: TextStyle(color: SettingsGlobalValues.neutralColor),
+        ),
+      ));
+
+      return widgets;
+    }
+
     if (GameValues.isGameStarted && !GameValues.isGameEnded) {
-      return [
-        // Hit=
-        ElevatedButton(
-          onPressed: () {
-            setState(() {
-              if (SettingsGlobalValues.showBestOptionAsPopup.settingValue) {
-                BestMoves.displayToast(
-                    BestMoves.getBestOptionTextWidget("HIT"));
+      final widgets = <Widget>[tokensSummary];
+
+      widgets.add(ElevatedButton(
+        onPressed: () {
+          setState(() {
+            if (SettingsGlobalValues.showBestOptionAsPopup.settingValue) {
+              BestMoves.displayToast(
+                  BestMoves.getBestOptionTextWidget("HIT"));
+            }
+            GameLogic.hit(GameValues.player.hands[GameValues.currentHandIndex]);
+          });
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: SettingsGlobalValues.positiveColor,
+        ),
+        child: const Text(
+          'Hit',
+          style: TextStyle(color: SettingsGlobalValues.neutralColor),
+        ),
+      ));
+
+      widgets.add(ElevatedButton(
+        onPressed: () {
+          setState(() {
+            if (SettingsGlobalValues.showBestOptionAsPopup.settingValue) {
+              BestMoves.displayToast(
+                  BestMoves.getBestOptionTextWidget("STAND"));
+            }
+            GameLogic.stand(GameValues.player.hands[GameValues.currentHandIndex]);
+          });
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: SettingsGlobalValues.positiveColor,
+        ),
+        child: const Text(
+          'Stand',
+          style: TextStyle(color: SettingsGlobalValues.neutralColor),
+        ),
+      ));
+
+      final bool canDouble = GameLogic.canDoubleCurrentHand();
+      widgets.add(ElevatedButton(
+        onPressed: canDouble
+            ? () {
+                setState(() {
+                  if (SettingsGlobalValues.showBestOptionAsPopup.settingValue) {
+                    BestMoves.displayToast(
+                        BestMoves.getBestOptionTextWidget("DOUBLE"));
+                  }
+                  GameLogic.double(
+                      GameValues.player.hands[GameValues.currentHandIndex]);
+                });
               }
-              GameLogic.hit(
-                  GameValues.player.hands[GameValues.currentHandIndex]);
-            });
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: SettingsGlobalValues.positiveColor,
-          ),
-          child: const Text(
-            'Hit',
-            style: TextStyle(color: SettingsGlobalValues.neutralColor),
-          ),
+            : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: canDouble
+              ? SettingsGlobalValues.positiveColor
+              : SettingsGlobalValues.secondColor,
         ),
-        // Stand
-        ElevatedButton(
-          onPressed: () {
-            setState(() {
-              if (SettingsGlobalValues.showBestOptionAsPopup.settingValue) {
-                BestMoves.displayToast(
-                    BestMoves.getBestOptionTextWidget("STAND"));
+        child: const Text(
+          'Double',
+          style: TextStyle(color: SettingsGlobalValues.neutralColor),
+        ),
+      ));
+
+      final bool canSplit = GameLogic.canSplit();
+      widgets.add(ElevatedButton(
+        onPressed: canSplit
+            ? () {
+                setState(() {
+                  if (SettingsGlobalValues.showBestOptionAsPopup.settingValue) {
+                    BestMoves.displayToast(
+                        BestMoves.getBestOptionTextWidget("SPLIT"));
+                  }
+                  GameLogic.split(
+                      GameValues.player.hands[GameValues.currentHandIndex]);
+                });
               }
-              GameLogic.stand(
-                  GameValues.player.hands[GameValues.currentHandIndex]);
-            });
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: SettingsGlobalValues.positiveColor,
-          ),
-          child: const Text(
-            'Stand',
-            style: TextStyle(color: SettingsGlobalValues.neutralColor),
-          ),
+            : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: canSplit
+              ? SettingsGlobalValues.positiveColor
+              : SettingsGlobalValues.secondColor,
         ),
-        // Double
-        ElevatedButton(
-          onPressed: () {
-            if (GameLogic.isFirstTurnForHand()) {
-              setState(() {
-                if (SettingsGlobalValues.showBestOptionAsPopup.settingValue) {
-                  BestMoves.displayToast(
-                      BestMoves.getBestOptionTextWidget("DOUBLE"));
-                }
-                GameLogic.double(
-                    GameValues.player.hands[GameValues.currentHandIndex]);
-              });
-            }
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: GameLogic.isFirstTurnForHand()
-                ? SettingsGlobalValues.positiveColor
-                : SettingsGlobalValues.secondColor,
-          ),
-          child: const Text(
-            'Double',
-            style: TextStyle(color: SettingsGlobalValues.neutralColor),
-          ),
+        child: const Text(
+          'Split',
+          style: TextStyle(color: SettingsGlobalValues.neutralColor),
         ),
-        // Split
-        ElevatedButton(
-          onPressed: () {
-            if (GameLogic.isFirstTurnForHand() && GameLogic.canSplit()) {
-              setState(() {
-                if (SettingsGlobalValues.showBestOptionAsPopup.settingValue) {
-                  BestMoves.displayToast(
-                      BestMoves.getBestOptionTextWidget("SPLIT"));
-                }
-                GameLogic.split(
-                    GameValues.player.hands[GameValues.currentHandIndex]);
-              });
-            }
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor:
-                GameLogic.isFirstTurnForHand() && GameLogic.canSplit()
-                    ? SettingsGlobalValues.positiveColor
-                    : SettingsGlobalValues.secondColor,
-          ),
-          child: const Text(
-            'Split',
-            style: TextStyle(color: SettingsGlobalValues.neutralColor),
-          ),
+      ));
+
+      final bool canSurrender = GameLogic.isFirstTurnForHand();
+      widgets.add(ElevatedButton(
+        onPressed: canSurrender
+            ? () {
+                setState(() {
+                  if (SettingsGlobalValues.showBestOptionAsPopup.settingValue) {
+                    BestMoves.displayToast(
+                        BestMoves.getBestOptionTextWidget("SURRENDER"));
+                  }
+                  GameLogic.surrender(
+                      GameValues.player.hands[GameValues.currentHandIndex]);
+                });
+              }
+            : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: canSurrender
+              ? SettingsGlobalValues.positiveColor
+              : SettingsGlobalValues.secondColor,
         ),
-        // Surrender
-        ElevatedButton(
-          onPressed: () {
-            if (GameLogic.isFirstTurnForHand()) {
-              setState(() {
-                if (SettingsGlobalValues.showBestOptionAsPopup.settingValue) {
-                  BestMoves.displayToast(
-                      BestMoves.getBestOptionTextWidget("SURRENDER"));
-                }
-                GameLogic.surrender(
-                    GameValues.player.hands[GameValues.currentHandIndex]);
-              });
-            }
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: GameLogic.isFirstTurnForHand()
-                ? SettingsGlobalValues.positiveColor
-                : SettingsGlobalValues.secondColor,
-          ),
-          child: const Text(
-            'Surrender',
-            style: TextStyle(color: SettingsGlobalValues.neutralColor),
-          ),
+        child: const Text(
+          'Surrender',
+          style: TextStyle(color: SettingsGlobalValues.neutralColor),
         ),
-      ];
+      ));
+
+      return widgets;
     }
+
     if (GameValues.isGameEnded && GameValues.isGameStarted) {
       return [
+        tokensSummary,
         ElevatedButton(
           onPressed: () async {
             await GameLogic.restartGame();
@@ -385,6 +644,8 @@ class PlayTableState extends State<PlayTable> {
         ),
       ];
     }
+
+    return [tokensSummary];
   }
 
   getHandColor(Hand hand) {

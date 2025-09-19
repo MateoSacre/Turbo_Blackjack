@@ -1,4 +1,5 @@
-import 'Card.dart';
+import '../../Settings/settings_global_values.dart';
+import 'card.dart';
 
 class GameValues {
   static List<Hand> handsToPlay = [];
@@ -17,6 +18,11 @@ class GameValues {
 
   static Map<String, String> matrix = {};
 
+  static int playerTokens = SettingsGlobalValues.startingTokens.settingValue;
+  static int bankruptcyCount = 0;
+  static bool waitingForInsuranceDecision = false;
+
+  static int get totalBet => player.hands.fold(0, (sum, hand) => sum + hand.bet);
 }
 
 class Player {
@@ -34,6 +40,8 @@ class Hand {
   bool isPlayed = false;
   bool isSplitted = false;
   bool isSurrender = false;
+  int bet = 0;
+  int insuranceBet = 0;
 
   int getValue() {
     int result = 0;
@@ -59,5 +67,12 @@ class Hand {
 
   getCardsValues() {
     return cards.map((card) => card.toString()).toList();
+  }
+
+  void resetRoundState() {
+    cards.clear();
+    isSplitted = false;
+    isSurrender = false;
+    insuranceBet = 0;
   }
 }
