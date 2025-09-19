@@ -81,8 +81,8 @@ class GameLogic {
     final insuranceCost = getInsuranceCost(hand);
     GameValues.tokens -= insuranceCost;
     hand.insuranceBet = insuranceCost;
-    SettingsGlobalValues.logger
-        .d("Insurance of $insuranceCost taken for hand ${GameValues.currentHandIndex}");
+    SettingsGlobalValues.logger.d(
+        "Insurance of $insuranceCost taken for hand ${GameValues.currentHandIndex}");
   }
 
   static bool canDoubleCurrentHand() {
@@ -218,10 +218,10 @@ class GameLogic {
         GameValues.player.hands[GameValues.currentHandIndex].cards.length <= 2;
   }
 
-  static double(Hand hand) async {
+  static doubleOnHand(Hand hand) async {
     if (!canDoubleCurrentHand()) {
-      SettingsGlobalValues.logger
-          .d("Cannot double hand ${GameValues.currentHandIndex} due to conditions");
+      SettingsGlobalValues.logger.d(
+          "Cannot double hand ${GameValues.currentHandIndex} due to conditions");
       return;
     }
     GameValues.tokens -= hand.bet;
@@ -268,8 +268,8 @@ class GameLogic {
       throw Exception("Current hand is -1 but should exist to split !");
     } else {
       if (!canSplit()) {
-        SettingsGlobalValues.logger
-            .d("Cannot split hand ${GameValues.currentHandIndex} due to conditions");
+        SettingsGlobalValues.logger.d(
+            "Cannot split hand ${GameValues.currentHandIndex} due to conditions");
         return;
       }
       GameValues.tokens -= hand.bet;

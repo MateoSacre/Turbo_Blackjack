@@ -404,7 +404,7 @@ class PlayTableState extends State<PlayTable> {
                       BestMoves.displayToast(
                           BestMoves.getBestOptionTextWidget("DOUBLE"));
                     }
-                    GameLogic.double(
+                    GameLogic.doubleOnHand(
                         GameValues.player.hands[GameValues.currentHandIndex]);
                   });
                 }
