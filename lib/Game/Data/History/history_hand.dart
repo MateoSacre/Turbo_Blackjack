@@ -12,6 +12,8 @@ class HistoryHand extends Hand {
       'isPlayed': isPlayed,
       'isSplitted': isSplitted,
       'isSurrender': isSurrender,
+      'bet': bet,
+      'insuranceBet': insuranceBet,
       'victoryStatus': victoryStatus.name,
       'isDealer': isDealer,
     };
@@ -23,6 +25,9 @@ class HistoryHand extends Hand {
     hand.isPlayed = json['isPlayed'] ?? false;
     hand.isSplitted = json['isSplitted'] ?? false;
     hand.isSurrender = json['isSurrender'] ?? false;
+    hand.bet = json['bet'] ?? 0;
+    hand.insuranceBet =
+        json['insuranceBet'] == null ? 0 : (json['insuranceBet'] as num).toDouble();
     hand.victoryStatus =
         VictoryStatus.values.byName(json['victoryStatus'] as String);
     hand.isDealer = json['isDealer'] ?? false;

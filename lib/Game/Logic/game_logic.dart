@@ -18,8 +18,95 @@ enum VictoryStatus {
 }
 
 class GameLogic {
+  static int getTotalBet() {
+    int total = 0;
+    for (final hand in GameValues.player.hands) {
+      total += hand.bet;
+    }
+    return total;
+  }
+
+  static bool canStartGame() {
+    if (GameValues.player.hands.isEmpty) {
+      return false;
+    }
+    if (GameValues.player.hands.any((hand) => hand.bet <= 0)) {
+      return false;
+    }
+    return getTotalBet() <= GameValues.tokens + 0.0001;
+  }
+
+  static bool canIncreaseBet(Hand hand) {
+    if (GameValues.isGameStarted || GameValues.isGameEnded) {
+      return false;
+    }
+    if (!GameValues.player.hands.contains(hand)) {
+      return false;
+    }
+    return getTotalBet() + 1 <= GameValues.tokens.floor();
+  }
+
+  static bool canDecreaseBet(Hand hand) {
+    if (GameValues.isGameStarted || GameValues.isGameEnded) {
+      return false;
+    }
+    return hand.bet > 0;
+  }
+
+  static double getInsuranceCost(Hand hand) {
+    return hand.bet / 2;
+  }
+
+  static bool canTakeInsurance(Hand hand) {
+    if (!GameValues.isGameStarted || GameValues.isGameEnded) {
+      return false;
+    }
+    if (!isFirstTurnForHand()) {
+      return false;
+    }
+    if (hand.insuranceBet > 0 || hand.bet <= 0) {
+      return false;
+    }
+    if (GameValues.dealerHand.cards.isEmpty ||
+        GameValues.dealerHand.cards.first.getTrueValue() != 1) {
+      return false;
+    }
+    return GameValues.tokens + 0.0001 >= getInsuranceCost(hand);
+  }
+
+  static void takeInsurance(Hand hand) {
+    if (!canTakeInsurance(hand)) {
+      return;
+    }
+    final insuranceCost = getInsuranceCost(hand);
+    GameValues.tokens -= insuranceCost;
+    hand.insuranceBet = insuranceCost;
+    SettingsGlobalValues.logger
+        .d("Insurance of $insuranceCost taken for hand ${GameValues.currentHandIndex}");
+  }
+
+  static bool canDoubleCurrentHand() {
+    if (!isFirstTurnForHand()) {
+      return false;
+    }
+    final hand = GameValues.player.hands[GameValues.currentHandIndex];
+    if (hand.isSurrender) {
+      return false;
+    }
+    return GameValues.tokens + 0.0001 >= hand.bet;
+  }
+
   static startNewGame() async {
+    if (!canStartGame()) {
+      SettingsGlobalValues.logger
+          .w('Attempted to start a game without valid bets or tokens.');
+      return;
+    }
+
     GameValues.isGameStarted = true;
+    final int totalBet = getTotalBet();
+    GameValues.tokens -= totalBet;
+
     for (Hand hand in GameValues.player.hands) {
       hand.cards.add(await DeckLogic.drawCard());
     }
@@ -36,12 +123,12 @@ class GameLogic {
     for (Card card in GameValues.dealerHand.cards) {
       GameValues.discardPile.add(card);
     }
-    GameValues.dealerHand.cards.clear();
+    GameValues.dealerHand.resetForNextRound();
     for (Hand hand in GameValues.player.hands) {
       for (Card card in hand.cards) {
         GameValues.discardPile.add(card);
       }
-      hand.cards.clear();
+      hand.resetForNextRound();
     }
     for (int i = 0; i < GameValues.nbSplitInGame; i++) {
       GameValues.player.hands.removeLast();
@@ -76,6 +163,7 @@ class GameLogic {
     } else {
       SettingsGlobalValues.logger.d("Hand not in index, playing for dealer");
       await playForDealer();
+      settleBets();
       GameValues.isGameEnded = true;
       SettingsGlobalValues.logger
           .d("Changing from hand [${GameValues.currentHandIndex}] to [-1]");
@@ -86,18 +174,28 @@ class GameLogic {
   static hit(Hand hand) async {
     hand.cards.add(await DeckLogic.drawCard());
     int handValue = hand.getValue();
+    bool isDealerHand = hand == GameValues.dealerHand;
     if (handValue > 21) {
       SettingsGlobalValues.logger
           .d("Bust at $handValue for hand ${GameValues.currentHandIndex}");
-      return await nextHandOrEnd();
+      if (!isDealerHand) {
+        return await nextHandOrEnd();
+      }
+      return;
     }
     if (handValue == 21 && hand.cards.length == 2) {
-      return await nextHandOrEnd();
+      if (!isDealerHand) {
+        return await nextHandOrEnd();
+      }
+      return;
     }
     if (handValue == 21) {
       SettingsGlobalValues.logger
           .d("21 for hand ${GameValues.currentHandIndex}");
-      return await nextHandOrEnd();
+      if (!isDealerHand) {
+        return await nextHandOrEnd();
+      }
+      return;
     }
     SettingsGlobalValues.logger
         .d("$handValue for hand ${GameValues.currentHandIndex}");
@@ -121,6 +219,15 @@ class GameLogic {
   }
 
   static double(Hand hand) async {
+    if (!canDoubleCurrentHand()) {
+      SettingsGlobalValues.logger
+          .d("Cannot double hand ${GameValues.currentHandIndex} due to conditions");
+      return;
+    }
+    GameValues.tokens -= hand.bet;
+    hand.bet *= 2;
+    SettingsGlobalValues.logger
+        .d("Doubling hand ${GameValues.currentHandIndex} to bet ${hand.bet}");
     hand.cards.add(await DeckLogic.drawCard());
     int handValue = hand.getValue();
     if (handValue > 21) {
@@ -146,22 +253,31 @@ class GameLogic {
   }
 
   static bool canSplit() {
-    return isFirstTurnForHand() &&
-        GameValues.player.hands[GameValues.currentHandIndex].cards.every(
-            (card) =>
-                card.value ==
-                GameValues.player.hands[GameValues.currentHandIndex].cards.first
-                    .value);
+    if (!isFirstTurnForHand()) {
+      return false;
+    }
+    Hand hand = GameValues.player.hands[GameValues.currentHandIndex];
+    if (GameValues.tokens + 0.0001 < hand.bet) {
+      return false;
+    }
+    return hand.cards.every((card) => card.value == hand.cards.first.value);
   }
 
   static split(Hand hand) {
     if (GameValues.currentHandIndex == -1) {
       throw Exception("Current hand is -1 but should exist to split !");
     } else {
+      if (!canSplit()) {
+        SettingsGlobalValues.logger
+            .d("Cannot split hand ${GameValues.currentHandIndex} due to conditions");
+        return;
+      }
+      GameValues.tokens -= hand.bet;
       Hand splittedHand = Hand();
       splittedHand.isSplitted = true;
       splittedHand.isPlayed = true;
       splittedHand.cards.add(hand.cards.removeAt(1));
+      splittedHand.bet = hand.bet;
       SettingsGlobalValues.logger.d(
           "Adding one hand from split at index [${GameValues.currentHandIndex + 1}]");
       GameValues.player.hands
@@ -200,6 +316,8 @@ class GameLogic {
         historyHand.cards.add(card);
       }
       historyHand.isSurrender = hand.isSurrender;
+      historyHand.bet = hand.bet;
+      historyHand.insuranceBet = hand.insuranceBet;
       historyGame.playerHands.add(historyHand);
     }
     historyGame.updateStats();
@@ -245,8 +363,60 @@ class GameLogic {
 
   static resetAll() {
     DeckLogic.resetDeck();
+    GameValues.player = Player();
+    GameValues.dealer = Player(Hand());
+    GameValues.dealerHand = GameValues.dealer.hands[0];
+    GameValues.tokens = GameValues.initialTokens;
+    GameValues.bankruptcyCount = 0;
     GameValues.player.hands.clear();
     GameValues.dealerHand.cards.clear();
     GameValues.handsToPlay.clear();
+    GameValues.isGameStarted = false;
+    GameValues.isGameEnded = false;
+    GameValues.currentHandIndex = -1;
+    GameValues.nbSplitInGame = 0;
+  }
+
+  static void settleBets() {
+    final bool dealerHasBlackJack = GameValues.dealerHand.getValue() == 21 &&
+        GameValues.dealerHand.cards.length == 2;
+
+    for (final hand in GameValues.player.hands) {
+      if (hand.bet <= 0) {
+        hand.insuranceBet = 0;
+        continue;
+      }
+
+      final status = getVictoryStatus(GameValues.dealerHand, hand);
+      switch (status) {
+        case VictoryStatus.blackJack:
+          GameValues.tokens += hand.bet * 2.5;
+          break;
+        case VictoryStatus.win:
+          GameValues.tokens += hand.bet * 2;
+          break;
+        case VictoryStatus.draw:
+          GameValues.tokens += hand.bet.toDouble();
+          break;
+        case VictoryStatus.surrender:
+          GameValues.tokens += hand.bet / 2;
+          break;
+        case VictoryStatus.bust:
+        case VictoryStatus.lost:
+        case VictoryStatus.empty:
+          break;
+      }
+
+      if (dealerHasBlackJack && hand.insuranceBet > 0) {
+        GameValues.tokens += hand.insuranceBet * 3;
+      }
+
+      hand.insuranceBet = 0;
+    }
+
+    if (GameValues.tokens <= 0.0001) {
+      GameValues.tokens += GameValues.bankruptcyRefillTokens;
+      GameValues.bankruptcyCount++;
+    }
   }
 }

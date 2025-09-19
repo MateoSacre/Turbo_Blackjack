@@ -6,6 +6,12 @@ class GameValues {
   static Player dealer = Player(Hand());
   static Hand dealerHand = dealer.hands[0];
 
+  static const double initialTokens = 100;
+  static const double bankruptcyRefillTokens = 10;
+
+  static double tokens = initialTokens;
+  static int bankruptcyCount = 0;
+
   static List<Card> deck = [];
   static List<Card> discardPile = [];
 
@@ -34,6 +40,8 @@ class Hand {
   bool isPlayed = false;
   bool isSplitted = false;
   bool isSurrender = false;
+  int bet = 0;
+  double insuranceBet = 0;
 
   int getValue() {
     int result = 0;
@@ -59,5 +67,15 @@ class Hand {
 
   getCardsValues() {
     return cards.map((card) => card.toString()).toList();
+  }
+
+  void resetForNextRound({bool keepBet = true}) {
+    cards.clear();
+    isSplitted = false;
+    isSurrender = false;
+    insuranceBet = 0;
+    if (!keepBet) {
+      bet = 0;
+    }
   }
 }

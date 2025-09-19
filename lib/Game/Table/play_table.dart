@@ -26,6 +26,14 @@ class PlayTableState extends State<PlayTable> {
     GameLogic.createHands();
   }
 
+  String _formatTokens(num value) {
+    final double doubleValue = value.toDouble();
+    if (doubleValue == doubleValue.roundToDouble()) {
+      return doubleValue.toStringAsFixed(0);
+    }
+    return doubleValue.toStringAsFixed(1);
+  }
+
   @override
   void dispose() {
     _timer.cancel();
@@ -48,36 +56,86 @@ class PlayTableState extends State<PlayTable> {
   }
 
   Widget _buildPosition(String text, Hand hand) {
+    final bool isSelectionPhase =
+        !GameValues.isGameStarted && !GameValues.isGameEnded && text != "D";
+    final bool isSelected = hand.isPlayed;
     return GestureDetector(
-      onTap:
-          (!GameValues.isGameStarted && !GameValues.isGameEnded && text != "D")
-              ? () {
-                  setState(() {
-                    hand.isPlayed = !hand.isPlayed;
-                    if (hand.isPlayed) {
-                      GameValues.player.hands.add(hand);
-                      SettingsGlobalValues.logger.d(
-                          "Added hand $text to Player[${GameValues.player.hands}]");
-                    } else {
-                      GameValues.player.hands.remove(hand);
-                      SettingsGlobalValues.logger.d(
-                          "Removed hand $text to Player[${GameValues.player.hands}]");
-                    }
-                  });
+      onTap: isSelectionPhase
+          ? () {
+              setState(() {
+                hand.isPlayed = !hand.isPlayed;
+                if (hand.isPlayed) {
+                  GameValues.player.hands.add(hand);
+                  SettingsGlobalValues.logger.d(
+                      "Added hand $text to Player[${GameValues.player.hands}]");
+                } else {
+                  GameValues.player.hands.remove(hand);
+                  hand.bet = 0;
+                  SettingsGlobalValues.logger.d(
+                      "Removed hand $text to Player[${GameValues.player.hands}]");
                 }
-              : null,
+              });
+            }
+          : null,
       child: Container(
         width: SettingsGlobalValues.getCardWidth(context),
         height: SettingsGlobalValues.getCardHeight(context),
         decoration: BoxDecoration(
-          color: hand.isPlayed
+          color: isSelected
               ? SettingsGlobalValues.positiveColor
               : SettingsGlobalValues.secondColor,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Center(
-          child: Text(text,
-              style: const TextStyle(color: SettingsGlobalValues.neutralColor)),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(text,
+                  style:
+                      const TextStyle(color: SettingsGlobalValues.neutralColor)),
+              if (isSelected)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Column(
+                    children: [
+                      Text('Bet: ${hand.bet}',
+                          style: const TextStyle(
+                              color: SettingsGlobalValues.neutralColor)),
+                      if (!GameValues.isGameStarted)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.remove,
+                                  color: SettingsGlobalValues.neutralColor),
+                              onPressed: GameLogic.canDecreaseBet(hand)
+                                  ? () {
+                                      setState(() {
+                                        if (hand.bet > 0) {
+                                          hand.bet--;
+                                        }
+                                      });
+                                    }
+                                  : null,
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.add,
+                                  color: SettingsGlobalValues.neutralColor),
+                              onPressed: GameLogic.canIncreaseBet(hand)
+                                  ? () {
+                                      setState(() {
+                                        hand.bet++;
+                                      });
+                                    }
+                                  : null,
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -140,6 +198,20 @@ class PlayTableState extends State<PlayTable> {
                     color: SettingsGlobalValues.neutralColor,
                     fontSize: SettingsGlobalValues.getFontSize(context)),
               ),
+              if (hand.bet > 0)
+                Text(
+                  'Bet: ${hand.bet}',
+                  style: TextStyle(
+                      color: SettingsGlobalValues.neutralColor,
+                      fontSize: SettingsGlobalValues.getFontSize(context)),
+                ),
+              if (hand.insuranceBet > 0)
+                Text(
+                  'Insurance: ${_formatTokens(hand.insuranceBet)}',
+                  style: TextStyle(
+                      color: SettingsGlobalValues.neutralColor,
+                      fontSize: SettingsGlobalValues.getFontSize(context)),
+                ),
             ],
           ),
         ),
@@ -166,6 +238,35 @@ class PlayTableState extends State<PlayTable> {
           ),
         ],
         title: const Text('Turbo Blackjack'),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: Column(
+              children: [
+                Text(
+                  'Tokens: ${_formatTokens(GameValues.tokens)}',
+                  style: const TextStyle(
+                      color: SettingsGlobalValues.neutralColor,
+                      fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  'Bankruptcies: ${GameValues.bankruptcyCount}',
+                  style: const TextStyle(
+                      color: SettingsGlobalValues.neutralColor,
+                      fontWeight: FontWeight.bold),
+                ),
+                if (!GameValues.isGameStarted)
+                  Text(
+                    'Total bet: ${GameLogic.getTotalBet()}',
+                    style: const TextStyle(
+                        color: SettingsGlobalValues.neutralColor,
+                        fontWeight: FontWeight.bold),
+                  ),
+              ],
+            ),
+          ),
+        ),
       ),
       body: SettingsGlobalValues.isLandscape(context)
           ? Row(
@@ -219,15 +320,18 @@ class PlayTableState extends State<PlayTable> {
   getButtons() {
     if (!GameValues.isGameEnded && !GameValues.isGameStarted) {
       bool hasHands = GameValues.player.hands.isNotEmpty;
+      bool canStart = hasHands && GameLogic.canStartGame();
       return [
         ElevatedButton(
-          onPressed: () {
-            setState(() {
-              if (hasHands) GameLogic.startNewGame();
-            });
-          },
+          onPressed: canStart
+              ? () {
+                  setState(() {
+                    GameLogic.startNewGame();
+                  });
+                }
+              : null,
           style: ElevatedButton.styleFrom(
-            backgroundColor: hasHands
+            backgroundColor: canStart
                 ? SettingsGlobalValues.positiveColor
                 : SettingsGlobalValues.secondColor,
           ),
@@ -239,7 +343,18 @@ class PlayTableState extends State<PlayTable> {
       ];
     }
     if (GameValues.isGameStarted && !GameValues.isGameEnded) {
-      return [
+      final List<Widget> buttons = [];
+      final bool hasCurrentHand = GameValues.currentHandIndex >= 0 &&
+          GameValues.currentHandIndex < GameValues.player.hands.length;
+      final Hand? currentHand =
+          hasCurrentHand ? GameValues.player.hands[GameValues.currentHandIndex] : null;
+      final bool canDouble =
+          hasCurrentHand && GameLogic.canDoubleCurrentHand();
+      final bool canSplit = hasCurrentHand && GameLogic.canSplit();
+      final bool canInsurance =
+          hasCurrentHand && currentHand != null && GameLogic.canTakeInsurance(currentHand);
+
+      buttons.addAll([
         // Hit=
         ElevatedButton(
           onPressed: () {
@@ -282,20 +397,20 @@ class PlayTableState extends State<PlayTable> {
         ),
         // Double
         ElevatedButton(
-          onPressed: () {
-            if (GameLogic.isFirstTurnForHand()) {
-              setState(() {
-                if (SettingsGlobalValues.showBestOptionAsPopup.settingValue) {
-                  BestMoves.displayToast(
-                      BestMoves.getBestOptionTextWidget("DOUBLE"));
+          onPressed: canDouble
+              ? () {
+                  setState(() {
+                    if (SettingsGlobalValues.showBestOptionAsPopup.settingValue) {
+                      BestMoves.displayToast(
+                          BestMoves.getBestOptionTextWidget("DOUBLE"));
+                    }
+                    GameLogic.double(
+                        GameValues.player.hands[GameValues.currentHandIndex]);
+                  });
                 }
-                GameLogic.double(
-                    GameValues.player.hands[GameValues.currentHandIndex]);
-              });
-            }
-          },
+              : null,
           style: ElevatedButton.styleFrom(
-            backgroundColor: GameLogic.isFirstTurnForHand()
+            backgroundColor: canDouble
                 ? SettingsGlobalValues.positiveColor
                 : SettingsGlobalValues.secondColor,
           ),
@@ -306,29 +421,30 @@ class PlayTableState extends State<PlayTable> {
         ),
         // Split
         ElevatedButton(
-          onPressed: () {
-            if (GameLogic.isFirstTurnForHand() && GameLogic.canSplit()) {
-              setState(() {
-                if (SettingsGlobalValues.showBestOptionAsPopup.settingValue) {
-                  BestMoves.displayToast(
-                      BestMoves.getBestOptionTextWidget("SPLIT"));
+          onPressed: canSplit
+              ? () {
+                  setState(() {
+                    if (SettingsGlobalValues.showBestOptionAsPopup.settingValue) {
+                      BestMoves.displayToast(
+                          BestMoves.getBestOptionTextWidget("SPLIT"));
+                    }
+                    GameLogic.split(
+                        GameValues.player.hands[GameValues.currentHandIndex]);
+                  });
                 }
-                GameLogic.split(
-                    GameValues.player.hands[GameValues.currentHandIndex]);
-              });
-            }
-          },
+              : null,
           style: ElevatedButton.styleFrom(
-            backgroundColor:
-                GameLogic.isFirstTurnForHand() && GameLogic.canSplit()
-                    ? SettingsGlobalValues.positiveColor
-                    : SettingsGlobalValues.secondColor,
+            backgroundColor: canSplit
+                ? SettingsGlobalValues.positiveColor
+                : SettingsGlobalValues.secondColor,
           ),
           child: const Text(
             'Split',
             style: TextStyle(color: SettingsGlobalValues.neutralColor),
           ),
         ),
+      ]);
+      buttons.add(
         // Surrender
         ElevatedButton(
           onPressed: () {
@@ -353,17 +469,43 @@ class PlayTableState extends State<PlayTable> {
             style: TextStyle(color: SettingsGlobalValues.neutralColor),
           ),
         ),
-      ];
+      );
+
+      buttons.add(ElevatedButton(
+        onPressed: canInsurance && currentHand != null
+            ? () {
+                setState(() {
+                  GameLogic.takeInsurance(currentHand);
+                });
+              }
+            : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: canInsurance
+              ? SettingsGlobalValues.positiveColor
+              : SettingsGlobalValues.secondColor,
+        ),
+        child: const Text(
+          'Insurance',
+          style: TextStyle(color: SettingsGlobalValues.neutralColor),
+        ),
+      ));
+
+      return buttons;
     }
     if (GameValues.isGameEnded && GameValues.isGameStarted) {
+      final bool canRestart = GameLogic.canStartGame();
       return [
         ElevatedButton(
-          onPressed: () async {
-            await GameLogic.restartGame();
-            setState(() {});
-          },
+          onPressed: canRestart
+              ? () async {
+                  await GameLogic.restartGame();
+                  setState(() {});
+                }
+              : null,
           style: ElevatedButton.styleFrom(
-            backgroundColor: SettingsGlobalValues.positiveColor,
+            backgroundColor: canRestart
+                ? SettingsGlobalValues.positiveColor
+                : SettingsGlobalValues.secondColor,
           ),
           child: const Text(
             'Restart Game',
