@@ -85,22 +85,72 @@ class SettingsGlobalValues {
     return width > height;
   }
 
-  static isBigScreen(BuildContext context) {
+  static int SMALL = 0;
+  static int MEDIUM = 1;
+  static int BIG = 2;
+
+  static getScreenSize(BuildContext context) {
     double width = MediaQuery.sizeOf(context).width;
     double height = MediaQuery.sizeOf(context).height;
-    return (width > height ? width : height) >= 1000;
+    return (width >= 1000) || (height >=900) ? BIG :
+    ((width <= 500) || (height <=400) ? SMALL : MEDIUM);
   }
 
   static getCardHeight(BuildContext context) {
-    return isBigScreen(context) ? playerCardHeightBig : playerCardHeightSmall;
+    switch(getScreenSize(context)){
+      case 0 :
+        return playerCardHeightSmall;
+      case 1 :
+        return playerCardHeightMedium;
+      case 2 :
+        return playerCardHeightBig;
+    }
   }
 
   static getCardWidth(BuildContext context) {
-    return isBigScreen(context) ? playerCardWidthBig : playerCardWidthSmall;
+    switch(getScreenSize(context)){
+      case 0 :
+        return playerCardWidthSmall;
+      case 1 :
+        return playerCardWidthMedium;
+      case 2 :
+        return playerCardWidthBig;
+    }
   }
 
   static getFontSize(BuildContext context) {
-    return isBigScreen(context) ? bigFont : smallFont;
+    switch(getScreenSize(context)){
+      case 0 :
+        return smallFont;
+      case 1 :
+        return mediumFont;
+      case 2 :
+        return bigFont;
+    }
+  }
+
+  static getIconSize(BuildContext context) {
+    switch(getScreenSize(context)){
+      case 0 :
+        return smallIconSize;
+      case 1 :
+        return mediumIconSize;
+      case 2 :
+        return bigIconSize;
+    }
+  }
+
+  static double getHomePageButtonHeight(BuildContext context) {
+    switch(getScreenSize(context)){
+      case 0 :
+        return homePageButtonHeightSmall;
+      case 1 :
+        return homePageButtonHeightMedium;
+      case 2 :
+        return homePageButtonHeightBig;
+      default:
+        return homePageButtonHeightMedium;
+    }
   }
 
   static const Color mainColor = Color(0xFF251228);
@@ -116,18 +166,28 @@ class SettingsGlobalValues {
   static const double globalEdgeInset = 10;
   static const double playerCardWidthSmall = 75;
   static const double playerCardHeightSmall = 110;
+  static const double playerCardWidthMedium = 120;
+  static const double playerCardHeightMedium = 176;
   static const double playerCardWidthBig = 200;
   static const double playerCardHeightBig = 293;
+  static const double bigIconSize = 75;
+  static const double mediumIconSize = 50;
+  static const double smallIconSize = 25;
   static const double addHandButtonWidth = 100;
   static const double addHandButtonHeight = 40;
+  static const double homePageButtonHeightSmall = 50;
+  static const double homePageButtonHeightMedium = 75;
+  static const double homePageButtonHeightBig = 100;
   static const double cardBorderWidth = 4;
-  static const SizedBox globalSizedBox = SizedBox(height: 20);
+  static const SizedBox smallSizedBox = SizedBox(height: 20);
+  static const SizedBox mediumSizedBox = SizedBox(height: 40);
   static const SizedBox bigSizedBox = SizedBox(height: 70);
 
   static const double toastPosition = 50;
 
   static const double mainScreenFont = 100;
   static const double bigFont = 28;
+  static const double mediumFont = 20;
   static const double smallFont = 12;
 
   static const int timeBetweenDrawsMS = 500;

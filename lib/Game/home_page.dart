@@ -45,14 +45,19 @@ class HomePage extends StatelessWidget {
                       Navigator.pushReplacementNamed(context, '/playTable')
                     },
                     style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 50),
+                      minimumSize: Size(
+                          double.infinity,
+                          SettingsGlobalValues.getHomePageButtonHeight(
+                              context)),
                       backgroundColor: SettingsGlobalValues.positiveColor,
                     ),
-                    child: const Text(
+                    child: Text(
                       'Play',
                       style: TextStyle(
-                          color: SettingsGlobalValues.neutralColor,
-                          fontWeight: FontWeight.bold),
+                        color: SettingsGlobalValues.neutralColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: SettingsGlobalValues.getFontSize(context),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -63,14 +68,20 @@ class HomePage extends StatelessWidget {
                           onPressed: () =>
                               Navigator.pushNamed(context, '/historyPage'),
                           style: ElevatedButton.styleFrom(
-                            minimumSize: const Size(double.infinity, 50),
+                            minimumSize: Size(
+                                double.infinity,
+                                SettingsGlobalValues.getHomePageButtonHeight(
+                                    context)),
                             backgroundColor: SettingsGlobalValues.secondColor,
                           ),
-                          child: const Text(
+                          child: Text(
                             'History',
                             style: TextStyle(
-                                color: SettingsGlobalValues.neutralColor,
-                                fontWeight: FontWeight.bold),
+                              color: SettingsGlobalValues.neutralColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize:
+                                  SettingsGlobalValues.getFontSize(context),
+                            ),
                           ),
                         ),
                       ),
@@ -80,14 +91,20 @@ class HomePage extends StatelessWidget {
                           onPressed: () =>
                               Navigator.pushNamed(context, '/statsPage'),
                           style: ElevatedButton.styleFrom(
-                            minimumSize: const Size(double.infinity, 50),
+                            minimumSize: Size(
+                                double.infinity,
+                                SettingsGlobalValues.getHomePageButtonHeight(
+                                    context)),
                             backgroundColor: SettingsGlobalValues.secondColor,
                           ),
-                          child: const Text(
+                          child: Text(
                             'Stats',
                             style: TextStyle(
-                                color: SettingsGlobalValues.neutralColor,
-                                fontWeight: FontWeight.bold),
+                              color: SettingsGlobalValues.neutralColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize:
+                                  SettingsGlobalValues.getFontSize(context),
+                            ),
                           ),
                         ),
                       ),

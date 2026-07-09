@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:turbo_blackjack/Settings/settings_global_values.dart';
 import 'package:turbo_blackjack/Settings/settings_types.dart';
 
@@ -17,15 +18,15 @@ class SettingsPageState extends State<SettingsPage> {
   List<Widget> generateSettingsWidgetList() {
     List<Widget> result = [];
     setState(() {
-      result.addAll(getOptionBooleanCoDependant(
+      result.add(getOptionBooleanCoDependant(
           SettingsGlobalValues.showBestOption,
           SettingsGlobalValues.showBestOptionAsPopup));
-      result.addAll(getOptionBooleanCoDependant(
+      result.add(getOptionBooleanCoDependant(
           SettingsGlobalValues.showBestOptionAsPopup,
           SettingsGlobalValues.showBestOption));
-      result.addAll(getOptionSlider(SettingsGlobalValues.deckCount));
-      result.addAll(getOptionSlider(SettingsGlobalValues.maxHands));
-      result.addAll(getOptionBoolean(SettingsGlobalValues.useShuffler));
+      result.add(getOptionSlider(SettingsGlobalValues.deckCount));
+      result.add(getOptionSlider(SettingsGlobalValues.maxHands));
+      result.add(getOptionBoolean(SettingsGlobalValues.useShuffler));
     });
     return result;
   }
@@ -40,6 +41,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    List<Widget> settingsList = generateSettingsWidgetList();
     return Scaffold(
       backgroundColor: SettingsGlobalValues.mainColor,
       appBar: AppBar(
@@ -50,84 +52,93 @@ class SettingsPageState extends State<SettingsPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(SettingsGlobalValues.globalEdgeInset),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              Wrap(
-                  alignment: WrapAlignment.center,
-                  children: generateSettingsWidgetList()),
-              ElevatedButton(
-                onPressed: validateSettings,
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
-                  backgroundColor: SettingsGlobalValues.positiveColor,
-                  disabledBackgroundColor:
-                      SettingsGlobalValues.negativeColor.withValues(alpha: .8),
-                ),
-                child: const Text(
-                  "Validate",
-                  style: TextStyle(color: SettingsGlobalValues.neutralColor),
-                ),
-              )
-            ],
-          ),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: MasonryGridView.count(
+              crossAxisCount: SettingsGlobalValues.isLandscape(context) ? 3 : 2,
+              mainAxisSpacing: 50,
+              crossAxisSpacing: 50,
+              itemCount: settingsList.length,
+              itemBuilder: (context, index) {
+                return settingsList[index];
+              }),
+        ),
+      ),
+      bottomNavigationBar: ElevatedButton(
+        onPressed: validateSettings,
+        style: ElevatedButton.styleFrom(
+          minimumSize: Size(double.infinity,
+              SettingsGlobalValues.getHomePageButtonHeight(context)),
+          backgroundColor: SettingsGlobalValues.positiveColor,
+          disabledBackgroundColor:
+              SettingsGlobalValues.negativeColor.withValues(alpha: .8),
+        ),
+        child: Text(
+          "Validate",
+          style: TextStyle(
+              color: SettingsGlobalValues.neutralColor,
+              fontSize:
+                  SettingsGlobalValues.getFontSize(context)),
         ),
       ),
     );
   }
 
-  List<Widget> getOptionSlider(IntegerSetting setting) {
+  Widget getOptionSlider(IntegerSetting setting) {
     return getOptionSliderWithValues(setting, 1, 7, 6);
   }
 
-  List<Widget> getOptionSliderWithValues(
+  Widget getOptionSliderWithValues(
       IntegerSetting setting, double min, double max, int divisions) {
-    List<Widget> result = [];
-    result.add(
-      Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0),
-        child: Text(
-          setting.settingName,
-          style: const TextStyle(color: SettingsGlobalValues.neutralColor),
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Text(
+            setting.settingName,
+            style: TextStyle(
+                color: SettingsGlobalValues.neutralColor,
+                fontSize: SettingsGlobalValues.getFontSize(context)),
+          ),
         ),
-      ),
-    );
-    result.add(
-      Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0),
-        child: Text(
-          setting.settingValue.toString(),
-          style: const TextStyle(color: SettingsGlobalValues.neutralColor),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Text(
+            setting.settingValue.toString(),
+            style: TextStyle(
+                color: SettingsGlobalValues.neutralColor,
+                fontSize: SettingsGlobalValues.getFontSize(context)),
+          ),
         ),
-      ),
+        Slider(
+          value: setting.settingValue.toDouble(),
+          min: min,
+          max: max,
+          divisions: divisions,
+          label: setting.settingValue.toString(),
+          onChanged: (value) {
+            setState(() {
+              setting.settingValue = value.toInt();
+              isReloadNeeded = isReloadNeeded || setting.doesChangeNeedReload;
+            });
+          },
+        ),
+        SettingsGlobalValues.smallSizedBox
+      ],
     );
-    result.add(Slider(
-      value: setting.settingValue.toDouble(),
-      min: min,
-      max: max,
-      divisions: divisions,
-      label: setting.settingValue.toString(),
-      onChanged: (value) {
-        setState(() {
-          setting.settingValue = value.toInt();
-          isReloadNeeded = isReloadNeeded || setting.doesChangeNeedReload;
-        });
-      },
-    ));
-    result.add(SettingsGlobalValues.globalSizedBox);
-    return result;
   }
 
-  List<Widget> getOptionBoolean(BoolSetting setting) {
-    List<Widget> result = [];
-    result.add(Row(
+  Widget getOptionBoolean(BoolSetting setting) {
+    return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: Text(
             setting.settingName,
-            style: const TextStyle(color: SettingsGlobalValues.neutralColor),
+            style: TextStyle(
+                color: SettingsGlobalValues.neutralColor,
+                fontSize: SettingsGlobalValues.getFontSize(context)),
           ),
         ),
         Switch(
@@ -142,43 +153,38 @@ class SettingsPageState extends State<SettingsPage> {
           },
         ),
       ],
-    ));
-    result.add(SettingsGlobalValues.globalSizedBox);
-    return result;
+    );
   }
 
-  List<Widget> getOptionBooleanCoDependant(
+  Widget getOptionBooleanCoDependant(
       BoolSetting setting, BoolSetting dependantSetting) {
-    List<Widget> result = [];
-    result.add(
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Text(
-              setting.settingName,
-              style: const TextStyle(color: SettingsGlobalValues.neutralColor),
-            ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Text(
+            setting.settingName,
+            style: TextStyle(
+                color: SettingsGlobalValues.neutralColor,
+                fontSize: SettingsGlobalValues.getFontSize(context)),
           ),
-          Switch(
-            value: setting.settingValue,
-            activeThumbColor: SettingsGlobalValues.positiveColor,
-            inactiveThumbColor: SettingsGlobalValues.negativeColor,
-            onChanged: (value) {
-              setState(() {
-                setting.settingValue = value;
-                if (setting.settingValue && dependantSetting.settingValue) {
-                  dependantSetting.settingValue = false;
-                }
-                isReloadNeeded = isReloadNeeded || setting.doesChangeNeedReload;
-              });
-            },
-          ),
-        ],
-      ),
+        ),
+        Switch(
+          value: setting.settingValue,
+          activeThumbColor: SettingsGlobalValues.positiveColor,
+          inactiveThumbColor: SettingsGlobalValues.negativeColor,
+          onChanged: (value) {
+            setState(() {
+              setting.settingValue = value;
+              if (setting.settingValue && dependantSetting.settingValue) {
+                dependantSetting.settingValue = false;
+              }
+              isReloadNeeded = isReloadNeeded || setting.doesChangeNeedReload;
+            });
+          },
+        ),
+      ],
     );
-    result.add(SettingsGlobalValues.globalSizedBox);
-    return result;
   }
 }

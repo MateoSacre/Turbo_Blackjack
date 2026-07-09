@@ -91,44 +91,61 @@ class PlayTableState extends State<PlayTable> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(text,
-                  style:
-                      const TextStyle(color: SettingsGlobalValues.neutralColor)),
+                  style: TextStyle(
+                      color: SettingsGlobalValues.neutralColor,
+                      fontSize: SettingsGlobalValues.getFontSize(context))),
               if (isSelected)
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0),
                   child: Column(
                     children: [
                       Text('Bet: ${hand.bet}',
-                          style: const TextStyle(
-                              color: SettingsGlobalValues.neutralColor)),
+                          style: TextStyle(
+                              color: SettingsGlobalValues.neutralColor,
+                              fontSize:
+                                  SettingsGlobalValues.getFontSize(context))),
                       if (!GameValues.isGameStarted)
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            IconButton(
-                              icon: const Icon(Icons.remove,
-                                  color: SettingsGlobalValues.neutralColor),
-                              onPressed: GameLogic.canDecreaseBet(hand)
-                                  ? () {
-                                      setState(() {
-                                        if (hand.bet > 0) {
-                                          hand.bet--;
-                                        }
-                                      });
-                                    }
-                                  : null,
+                            SizedBox(
+                              height: SettingsGlobalValues.getIconSize(context),
+                              width: SettingsGlobalValues.getIconSize(context),
+                              child: IconButton(
+                                icon: Icon(Icons.remove,
+                                    color: SettingsGlobalValues.neutralColor,
+                                    size: SettingsGlobalValues.getIconSize(
+                                        context)),
+                                padding: const EdgeInsets.all(0),
+                                onPressed: GameLogic.canDecreaseBet(hand)
+                                    ? () {
+                                        setState(() {
+                                          if (hand.bet > 0) {
+                                            hand.bet--;
+                                          }
+                                        });
+                                      }
+                                    : null,
+                              ),
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.add,
-                                  color: SettingsGlobalValues.neutralColor),
-                              onPressed: GameLogic.canIncreaseBet(hand)
-                                  ? () {
-                                      setState(() {
-                                        hand.bet++;
-                                      });
-                                    }
-                                  : null,
-                            ),
+                            SizedBox(
+                              height: SettingsGlobalValues.getIconSize(context),
+                              width: SettingsGlobalValues.getIconSize(context),
+                              child: IconButton(
+                                icon: Icon(Icons.add,
+                                    color: SettingsGlobalValues.neutralColor,
+                                    size: SettingsGlobalValues.getIconSize(
+                                        context)),
+                                padding: const EdgeInsets.all(0),
+                                onPressed: GameLogic.canIncreaseBet(hand)
+                                    ? () {
+                                        setState(() {
+                                          hand.bet++;
+                                        });
+                                      }
+                                    : null,
+                              ),
+                            )
                           ],
                         ),
                     ],
@@ -239,29 +256,32 @@ class PlayTableState extends State<PlayTable> {
         ],
         title: const Text('Turbo Blackjack'),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
+          preferredSize: const Size.fromHeight(100),
           child: Padding(
             padding: const EdgeInsets.only(bottom: 8.0),
             child: Column(
               children: [
                 Text(
                   'Tokens: ${_formatTokens(GameValues.tokens)}',
-                  style: const TextStyle(
+                  style: TextStyle(
                       color: SettingsGlobalValues.neutralColor,
-                      fontWeight: FontWeight.bold),
+                      fontWeight: FontWeight.bold,
+                      fontSize: SettingsGlobalValues.getFontSize(context)),
                 ),
                 Text(
                   'Bankruptcies: ${GameValues.bankruptcyCount}',
-                  style: const TextStyle(
+                  style: TextStyle(
                       color: SettingsGlobalValues.neutralColor,
-                      fontWeight: FontWeight.bold),
+                      fontWeight: FontWeight.bold,
+                      fontSize: SettingsGlobalValues.getFontSize(context)),
                 ),
                 if (!GameValues.isGameStarted)
                   Text(
                     'Total bet: ${GameLogic.getTotalBet()}',
-                    style: const TextStyle(
+                    style: TextStyle(
                         color: SettingsGlobalValues.neutralColor,
-                        fontWeight: FontWeight.bold),
+                        fontWeight: FontWeight.bold,
+                        fontSize: SettingsGlobalValues.getFontSize(context)),
                   ),
               ],
             ),
@@ -270,11 +290,21 @@ class PlayTableState extends State<PlayTable> {
       ),
       body: SettingsGlobalValues.isLandscape(context)
           ? Row(
-              children: getTable(),
-            )
+        children: getTable(),
+      )
           : Column(
-              children: getTable(),
-            ),
+        children: getTable(),
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Wrap(
+          direction: Axis.horizontal,
+          alignment: WrapAlignment.center,
+          spacing: SettingsGlobalValues.globalEdgeInset,
+          runSpacing: SettingsGlobalValues.globalEdgeInset,
+          children: getButtons(),
+        ),
+      ),
     );
   }
 
@@ -300,20 +330,6 @@ class PlayTableState extends State<PlayTable> {
           children: getCards(context),
         ),
       )),
-      // Contextual Buttons
-      Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Center(
-            child: Wrap(
-              direction: SettingsGlobalValues.isLandscape(context)
-                  ? Axis.vertical
-                  : Axis.horizontal,
-              alignment: WrapAlignment.center,
-              spacing: SettingsGlobalValues.globalEdgeInset,
-              runSpacing: SettingsGlobalValues.globalEdgeInset,
-              children: getButtons(),
-            ),
-          )),
     ];
   }
 
@@ -335,9 +351,11 @@ class PlayTableState extends State<PlayTable> {
                 ? SettingsGlobalValues.positiveColor
                 : SettingsGlobalValues.secondColor,
           ),
-          child: const Text(
+          child: Text(
             'Start Game',
-            style: TextStyle(color: SettingsGlobalValues.neutralColor),
+            style: TextStyle(
+                color: SettingsGlobalValues.neutralColor,
+                fontSize: SettingsGlobalValues.getFontSize(context)),
           ),
         ),
       ];
@@ -346,13 +364,14 @@ class PlayTableState extends State<PlayTable> {
       final List<Widget> buttons = [];
       final bool hasCurrentHand = GameValues.currentHandIndex >= 0 &&
           GameValues.currentHandIndex < GameValues.player.hands.length;
-      final Hand? currentHand =
-          hasCurrentHand ? GameValues.player.hands[GameValues.currentHandIndex] : null;
-      final bool canDouble =
-          hasCurrentHand && GameLogic.canDoubleCurrentHand();
+      final Hand? currentHand = hasCurrentHand
+          ? GameValues.player.hands[GameValues.currentHandIndex]
+          : null;
+      final bool canDouble = hasCurrentHand && GameLogic.canDoubleCurrentHand();
       final bool canSplit = hasCurrentHand && GameLogic.canSplit();
-      final bool canInsurance =
-          hasCurrentHand && currentHand != null && GameLogic.canTakeInsurance(currentHand);
+      final bool canInsurance = hasCurrentHand &&
+          currentHand != null &&
+          GameLogic.canTakeInsurance(currentHand);
 
       buttons.addAll([
         // Hit=
@@ -370,9 +389,11 @@ class PlayTableState extends State<PlayTable> {
           style: ElevatedButton.styleFrom(
             backgroundColor: SettingsGlobalValues.positiveColor,
           ),
-          child: const Text(
+          child: Text(
             'Hit',
-            style: TextStyle(color: SettingsGlobalValues.neutralColor),
+            style: TextStyle(
+                color: SettingsGlobalValues.neutralColor,
+                fontSize: SettingsGlobalValues.getFontSize(context)),
           ),
         ),
         // Stand
@@ -390,9 +411,11 @@ class PlayTableState extends State<PlayTable> {
           style: ElevatedButton.styleFrom(
             backgroundColor: SettingsGlobalValues.positiveColor,
           ),
-          child: const Text(
+          child: Text(
             'Stand',
-            style: TextStyle(color: SettingsGlobalValues.neutralColor),
+            style: TextStyle(
+                color: SettingsGlobalValues.neutralColor,
+                fontSize: SettingsGlobalValues.getFontSize(context)),
           ),
         ),
         // Double
@@ -400,7 +423,8 @@ class PlayTableState extends State<PlayTable> {
           onPressed: canDouble
               ? () {
                   setState(() {
-                    if (SettingsGlobalValues.showBestOptionAsPopup.settingValue) {
+                    if (SettingsGlobalValues
+                        .showBestOptionAsPopup.settingValue) {
                       BestMoves.displayToast(
                           BestMoves.getBestOptionTextWidget("DOUBLE"));
                     }
@@ -414,9 +438,11 @@ class PlayTableState extends State<PlayTable> {
                 ? SettingsGlobalValues.positiveColor
                 : SettingsGlobalValues.secondColor,
           ),
-          child: const Text(
+          child: Text(
             'Double',
-            style: TextStyle(color: SettingsGlobalValues.neutralColor),
+            style: TextStyle(
+                color: SettingsGlobalValues.neutralColor,
+                fontSize: SettingsGlobalValues.getFontSize(context)),
           ),
         ),
         // Split
@@ -424,7 +450,8 @@ class PlayTableState extends State<PlayTable> {
           onPressed: canSplit
               ? () {
                   setState(() {
-                    if (SettingsGlobalValues.showBestOptionAsPopup.settingValue) {
+                    if (SettingsGlobalValues
+                        .showBestOptionAsPopup.settingValue) {
                       BestMoves.displayToast(
                           BestMoves.getBestOptionTextWidget("SPLIT"));
                     }
@@ -438,9 +465,11 @@ class PlayTableState extends State<PlayTable> {
                 ? SettingsGlobalValues.positiveColor
                 : SettingsGlobalValues.secondColor,
           ),
-          child: const Text(
+          child: Text(
             'Split',
-            style: TextStyle(color: SettingsGlobalValues.neutralColor),
+            style: TextStyle(
+                color: SettingsGlobalValues.neutralColor,
+                fontSize: SettingsGlobalValues.getFontSize(context)),
           ),
         ),
       ]);
@@ -464,9 +493,11 @@ class PlayTableState extends State<PlayTable> {
                 ? SettingsGlobalValues.positiveColor
                 : SettingsGlobalValues.secondColor,
           ),
-          child: const Text(
+          child: Text(
             'Surrender',
-            style: TextStyle(color: SettingsGlobalValues.neutralColor),
+            style: TextStyle(
+                color: SettingsGlobalValues.neutralColor,
+                fontSize: SettingsGlobalValues.getFontSize(context)),
           ),
         ),
       );
@@ -484,9 +515,11 @@ class PlayTableState extends State<PlayTable> {
               ? SettingsGlobalValues.positiveColor
               : SettingsGlobalValues.secondColor,
         ),
-        child: const Text(
+        child: Text(
           'Insurance',
-          style: TextStyle(color: SettingsGlobalValues.neutralColor),
+          style: TextStyle(
+              color: SettingsGlobalValues.neutralColor,
+              fontSize: SettingsGlobalValues.getFontSize(context)),
         ),
       ));
 
