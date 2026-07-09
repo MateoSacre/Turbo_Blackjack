@@ -158,8 +158,3 @@ Android primarily, but the standard `android/`, `ios/`, `linux/`, `macos/`,
 flutter pub get
 flutter run -d windows   # or: android, chrome, etc.
 ```
-
-> **Note**: `pubspec.yaml` currently points the `fluttertoast` dependency at
-> a local sibling folder (`path: ../flutter_toast_update`) rather than a
-> published package version. That folder needs to exist next to this repo
-> for `flutter pub get` to succeed elsewhere.
