@@ -2,7 +2,7 @@ import 'package:turbo_blackjack/Game/Data/History/history_game.dart';
 import 'package:turbo_blackjack/Game/Data/History/history_manager.dart';
 
 import '../../Settings/settings_global_values.dart';
-import '../Data/Card.dart';
+import '../Data/card.dart';
 import '../Data/History/history_hand.dart';
 import '../Data/game_values.dart';
 import 'deck_logic.dart';
@@ -59,10 +59,13 @@ class GameLogic {
   }
 
   static bool canTakeInsurance(Hand hand) {
-    if (!GameValues.isGameStarted || GameValues.isGameEnded) {
+    // Real blackjack rules only offer insurance once, right after the
+    // deal, before any hand acts - not "any time during a hand's first
+    // turn" like this used to allow.
+    if (!GameValues.waitingForInsuranceDecision) {
       return false;
     }
-    if (!isFirstTurnForHand()) {
+    if (!GameValues.player.hands.contains(hand)) {
       return false;
     }
     if (hand.insuranceBet > 0 || hand.bet <= 0) {
@@ -115,12 +118,29 @@ class GameLogic {
     for (Hand hand in GameValues.player.hands) {
       hand.cards.add(await DeckLogic.drawCard());
     }
+
+    if (GameValues.dealerHand.cards.first.getTrueValue() == 1) {
+      GameValues.waitingForInsuranceDecision = true;
+      SettingsGlobalValues.logger
+          .d("Dealer shows an Ace. Waiting for insurance decisions.");
+      return;
+    }
+
+    await nextHandOrEnd();
+  }
+
+  static Future<void> resolveInsurancePhase() async {
+    if (!GameValues.waitingForInsuranceDecision) {
+      return;
+    }
+    GameValues.waitingForInsuranceDecision = false;
     await nextHandOrEnd();
   }
 
   static Future<void> endGame() async {
     GameValues.isGameStarted = false;
     GameValues.isGameEnded = false;
+    GameValues.waitingForInsuranceDecision = false;
     for (Card card in GameValues.dealerHand.cards) {
       GameValues.discardPile.add(card);
     }
@@ -147,6 +167,11 @@ class GameLogic {
   }
 
   static Future<void> nextHandOrEnd() async {
+    if (GameValues.waitingForInsuranceDecision) {
+      SettingsGlobalValues.logger.d(
+          "Awaiting insurance decisions before moving to the next hand.");
+      return;
+    }
     SettingsGlobalValues.logger.d(
         "Changing from hand [${GameValues.currentHandIndex}] to [${GameValues.currentHandIndex + 1}]");
     GameValues.currentHandIndex++;
@@ -367,13 +392,14 @@ class GameLogic {
     GameValues.player = Player();
     GameValues.dealer = Player(Hand());
     GameValues.dealerHand = GameValues.dealer.hands[0];
-    GameValues.tokens = GameValues.initialTokens;
+    GameValues.tokens = SettingsGlobalValues.startingTokens.settingValue * 2;
     GameValues.bankruptcyCount = 0;
     GameValues.player.hands.clear();
     GameValues.dealerHand.cards.clear();
     GameValues.handsToPlay.clear();
     GameValues.isGameStarted = false;
     GameValues.isGameEnded = false;
+    GameValues.waitingForInsuranceDecision = false;
     GameValues.currentHandIndex = -1;
     GameValues.nbSplitInGame = 0;
   }

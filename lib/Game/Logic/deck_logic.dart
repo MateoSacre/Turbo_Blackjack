@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import '../../Settings/settings_global_values.dart';
-import '../Data/Card.dart';
+import '../Data/card.dart';
 import '../Data/game_values.dart';
 import '../Notifier/deck_notifier.dart';
 

@@ -7,26 +7,37 @@ import 'history_game.dart';
 
 class HistoryManager {
   static List<HistoryGame> history = [];
-  static late File _file;
+  static File? _file;
 
   static Future<void> init() async {
-    final dir = await getApplicationDocumentsDirectory();
-    _file = File('${dir.path}/history.json');
-    if (await _file.exists()) {
-      final content = await _file.readAsString();
-      if (content.isNotEmpty) {
-        final List<dynamic> jsonList = jsonDecode(content);
-        history = jsonList.map((e) => HistoryGame.fromJson(e)).toList();
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/history.json');
+      if (await file.exists()) {
+        final content = await file.readAsString();
+        if (content.isNotEmpty) {
+          final List<dynamic> jsonList = jsonDecode(content);
+          history = jsonList.map((e) => HistoryGame.fromJson(e)).toList();
+        }
+      } else {
+        await file.create(recursive: true);
+        await file.writeAsString('[]');
       }
-    } else {
-      await _file.create(recursive: true);
-      await _file.writeAsString('[]');
+      _file = file;
+    } catch (e) {
+      // No filesystem access on this platform (e.g. web): keep history
+      // in-memory for the session instead of crashing on startup.
+      _file = null;
     }
   }
 
   static Future<void> _save() async {
+    final file = _file;
+    if (file == null) {
+      return;
+    }
     final data = jsonEncode(history.map((e) => e.toJson()).toList());
-    await _file.writeAsString(data);
+    await file.writeAsString(data);
   }
 
   static Future<void> addGame(HistoryGame game) async {

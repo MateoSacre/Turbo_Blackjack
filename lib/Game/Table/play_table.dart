@@ -360,18 +360,66 @@ class PlayTableState extends State<PlayTable> {
         ),
       ];
     }
-    if (GameValues.isGameStarted && !GameValues.isGameEnded) {
+    if (GameValues.isGameStarted && GameValues.waitingForInsuranceDecision) {
+      final List<Widget> buttons = [];
+      final bool multipleHands = GameValues.player.hands.length > 1;
+      for (final hand in GameValues.player.hands) {
+        final int handIndex = GameValues.player.hands.indexOf(hand);
+        final bool canInsurance = GameLogic.canTakeInsurance(hand);
+        final String label = hand.insuranceBet > 0
+            ? (multipleHands ? 'Insured (Hand ${handIndex + 1})' : 'Insured')
+            : (multipleHands
+                ? 'Insure Hand ${handIndex + 1}'
+                : 'Take Insurance');
+        buttons.add(ElevatedButton(
+          onPressed: canInsurance
+              ? () {
+                  setState(() {
+                    GameLogic.takeInsurance(hand);
+                  });
+                }
+              : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: hand.insuranceBet > 0
+                ? SettingsGlobalValues.activeColor
+                : (canInsurance
+                    ? SettingsGlobalValues.positiveColor
+                    : SettingsGlobalValues.secondColor),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+                color: SettingsGlobalValues.neutralColor,
+                fontSize: SettingsGlobalValues.getFontSize(context)),
+          ),
+        ));
+      }
+      buttons.add(ElevatedButton(
+        onPressed: () {
+          setState(() {
+            GameLogic.resolveInsurancePhase();
+          });
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: SettingsGlobalValues.positiveColor,
+        ),
+        child: Text(
+          'Continue',
+          style: TextStyle(
+              color: SettingsGlobalValues.neutralColor,
+              fontSize: SettingsGlobalValues.getFontSize(context)),
+        ),
+      ));
+      return buttons;
+    }
+    if (GameValues.isGameStarted &&
+        !GameValues.isGameEnded &&
+        !GameValues.waitingForInsuranceDecision) {
       final List<Widget> buttons = [];
       final bool hasCurrentHand = GameValues.currentHandIndex >= 0 &&
           GameValues.currentHandIndex < GameValues.player.hands.length;
-      final Hand? currentHand = hasCurrentHand
-          ? GameValues.player.hands[GameValues.currentHandIndex]
-          : null;
       final bool canDouble = hasCurrentHand && GameLogic.canDoubleCurrentHand();
       final bool canSplit = hasCurrentHand && GameLogic.canSplit();
-      final bool canInsurance = hasCurrentHand &&
-          currentHand != null &&
-          GameLogic.canTakeInsurance(currentHand);
 
       buttons.addAll([
         // Hit=
@@ -501,27 +549,6 @@ class PlayTableState extends State<PlayTable> {
           ),
         ),
       );
-
-      buttons.add(ElevatedButton(
-        onPressed: canInsurance && currentHand != null
-            ? () {
-                setState(() {
-                  GameLogic.takeInsurance(currentHand);
-                });
-              }
-            : null,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: canInsurance
-              ? SettingsGlobalValues.positiveColor
-              : SettingsGlobalValues.secondColor,
-        ),
-        child: Text(
-          'Insurance',
-          style: TextStyle(
-              color: SettingsGlobalValues.neutralColor,
-              fontSize: SettingsGlobalValues.getFontSize(context)),
-        ),
-      ));
 
       return buttons;
     }

@@ -15,6 +15,10 @@ class SettingsGlobalValues {
       settingName: 'Deck Count', settingValue: 1, doesChangeNeedReload: true);
   static IntegerSetting maxHands = IntegerSetting(
       settingName: 'Max Hands', settingValue: 3, doesChangeNeedReload: false);
+  static IntegerSetting startingTokens = IntegerSetting(
+      settingName: 'Starting Tokens',
+      settingValue: 100,
+      doesChangeNeedReload: false);
   static BoolSetting showBestOption = BoolSetting(
       settingName: "Show Best Option",
       settingValue: false,
@@ -32,6 +36,7 @@ class SettingsGlobalValues {
     return {
       'deckCount': deckCount.toJson(),
       'maxHands': maxHands.toJson(),
+      'startingTokens': startingTokens.toJson(),
       'showBestOption': showBestOption.toJson(),
       'showBestOptionAsPopup': showBestOptionAsPopup.toJson(),
       'useShuffler': useShuffler.toJson(),
@@ -41,6 +46,10 @@ class SettingsGlobalValues {
   factory SettingsGlobalValues.fromJson(Map<String, dynamic> json) {
     SettingsGlobalValues.deckCount = IntegerSetting.fromJson(json['deckCount']);
     SettingsGlobalValues.maxHands = IntegerSetting.fromJson(json['maxHands']);
+    if (json.containsKey('startingTokens')) {
+      SettingsGlobalValues.startingTokens =
+          IntegerSetting.fromJson(json['startingTokens']);
+    }
     SettingsGlobalValues.showBestOption =
         BoolSetting.fromJson(json['showBestOption']);
     SettingsGlobalValues.showBestOptionAsPopup =
@@ -69,6 +78,9 @@ class SettingsGlobalValues {
 
         deckCount = IntegerSetting.fromJson(jsonData['deckCount']);
         maxHands = IntegerSetting.fromJson(jsonData['maxHands']);
+        if (jsonData.containsKey('startingTokens')) {
+          startingTokens = IntegerSetting.fromJson(jsonData['startingTokens']);
+        }
         showBestOption = BoolSetting.fromJson(jsonData['showBestOption']);
         showBestOptionAsPopup =
             BoolSetting.fromJson(jsonData['showBestOptionAsPopup']);

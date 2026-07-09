@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../Settings/settings_global_values.dart';
 import 'Data/History/history_game.dart';
 import 'Data/History/history_manager.dart';
+import 'Data/game_values.dart';
 import 'Logic/game_logic.dart';
 
 class StatsPage extends StatefulWidget {
@@ -30,6 +31,7 @@ class _StatsPageState extends State<StatsPage> {
     final games = _getGames();
     final stats = _calculateStats(games);
 
+    final bankrollSummary = _buildBankrollSummary(context);
     final selector = _buildSelector();
     final statSummaryChart = _buildSummaryChart(context, stats);
     final fullStatChart = _buildResponsiveChart(context, stats);
@@ -61,6 +63,7 @@ class _StatsPageState extends State<StatsPage> {
               spacing: SettingsGlobalValues.statChartSpacing,
               runSpacing: SettingsGlobalValues.statChartSpacing,
               children: [
+                bankrollSummary,
                 selector,
                 statSummaryChart,
                 fullStatChart,
@@ -367,6 +370,40 @@ class _StatsPageState extends State<StatsPage> {
           ),
         );
       },
+    );
+  }
+
+  String _formatTokens(num halfUnits) {
+    final double tokens = halfUnits / 2;
+    return tokens == tokens.roundToDouble()
+        ? tokens.toStringAsFixed(0)
+        : tokens.toStringAsFixed(1);
+  }
+
+  Widget _buildBankrollSummary(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: SettingsGlobalValues.secondColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Current tokens: ${_formatTokens(GameValues.tokens)}',
+            style: TextStyle(
+                color: SettingsGlobalValues.neutralColor,
+                fontSize: SettingsGlobalValues.getFontSize(context)),
+          ),
+          Text(
+            'Bankruptcies: ${GameValues.bankruptcyCount}',
+            style: TextStyle(
+                color: SettingsGlobalValues.neutralColor,
+                fontSize: SettingsGlobalValues.getFontSize(context)),
+          ),
+        ],
+      ),
     );
   }
 

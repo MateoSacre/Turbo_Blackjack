@@ -1,5 +1,5 @@
 import '../../Logic/game_logic.dart';
-import '../Card.dart';
+import '../card.dart';
 import '../game_values.dart';
 
 class HistoryHand extends Hand {

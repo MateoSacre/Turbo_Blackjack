@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:turbo_blackjack/Game/Logic/best_moves.dart';
 
 import 'Game/Table/play_table.dart';
+import 'Game/Data/game_values.dart';
 import 'Game/home_page.dart';
 import 'Settings/setting_page.dart';
 import 'Settings/settings_global_values.dart';
@@ -12,6 +13,7 @@ import 'Game/stats_page.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SettingsGlobalValues.loadSettings();
+  GameValues.tokens = SettingsGlobalValues.startingTokens.settingValue * 2;
   await HistoryManager.init();
   runApp(const MyApp());
 }

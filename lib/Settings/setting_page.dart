@@ -26,6 +26,8 @@ class SettingsPageState extends State<SettingsPage> {
           SettingsGlobalValues.showBestOption));
       result.add(getOptionSlider(SettingsGlobalValues.deckCount));
       result.add(getOptionSlider(SettingsGlobalValues.maxHands));
+      result.add(getOptionSliderWithValues(
+          SettingsGlobalValues.startingTokens, 10, 500, 49));
       result.add(getOptionBoolean(SettingsGlobalValues.useShuffler));
     });
     return result;

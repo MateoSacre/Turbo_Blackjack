@@ -1,4 +1,4 @@
-import 'Card.dart';
+import 'card.dart';
 
 class GameValues {
   static List<Hand> handsToPlay = [];
@@ -20,6 +20,7 @@ class GameValues {
 
   static bool isGameStarted = false;
   static bool isGameEnded = false;
+  static bool waitingForInsuranceDecision = false;
 
   static int currentHandIndex = -1;
   static int nbSplitInGame = 0;
