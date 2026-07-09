@@ -397,6 +397,7 @@ class GameLogic {
     GameValues.player.hands.clear();
     GameValues.dealerHand.cards.clear();
     GameValues.handsToPlay.clear();
+    GameValues.shufflerCompartments = [];
     GameValues.isGameStarted = false;
     GameValues.isGameEnded = false;
     GameValues.waitingForInsuranceDecision = false;

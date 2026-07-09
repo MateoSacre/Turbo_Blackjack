@@ -18,6 +18,11 @@ class GameValues {
   static List<Card> deck = [];
   static List<Card> discardPile = [];
 
+  // Continuous Shuffling Machine state (used when the "Use Shuffler"
+  // setting is on). See DeckLogic for the algorithm and README.md for the
+  // documented model this is based on.
+  static List<List<Card>> shufflerCompartments = [];
+
   static bool isGameStarted = false;
   static bool isGameEnded = false;
   static bool waitingForInsuranceDecision = false;

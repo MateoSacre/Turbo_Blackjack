@@ -5,14 +5,25 @@ import '../Data/card.dart';
 import '../Data/game_values.dart';
 import '../Notifier/deck_notifier.dart';
 
+/// Two real, documented shuffling models, selected by the "Use Shuffler"
+/// setting. See README.md ("Shuffler models") for the full write-up and
+/// sources.
+///
+/// - Off: a batch shoe. When it runs out, discards are riffled back in
+///   using the Gilbert-Shannon-Reeds (GSR) model, the standard mathematical
+///   model of a real riffle shuffle.
+/// - On: a Continuous Shuffling Machine (CSM), modelled after Shuffle
+///   Master's patented design (US 6,254,096 / US 7,137,627): cards are fed
+///   one at a time into randomly chosen compartments and the shoe is
+///   refilled by emptying a randomly chosen compartment whenever it runs
+///   low.
 class DeckLogic {
   static final random = Random();
 
-  static checkForDeckShuffle() {
+  static void checkForDeckShuffle() {
     if (SettingsGlobalValues.useShuffler.settingValue) {
-      if (GameValues.discardPile.length >= 10) {
-        shuffleWithShuffler();
-      }
+      _feedDiscardIntoShuffler();
+      _refillShoeFromShuffler();
     } else {
       if (GameValues.deck.isEmpty) {
         resetDeck();
@@ -20,53 +31,70 @@ class DeckLogic {
     }
   }
 
-  static resetDeck() {
+  static void resetDeck() {
     GameValues.deck.addAll(GameValues.discardPile);
     GameValues.discardPile.clear();
     shuffleDeck();
   }
 
+  // --- Batch shoe: Gilbert-Shannon-Reeds riffle shuffle -------------------
+  // Model: Gilbert (1955) / Reeds (1981), analyzed by Bayer & Diaconis,
+  // "Trailing the Dovetail Shuffle to its Lair" (1992).
+  // https://en.wikipedia.org/wiki/Gilbert%E2%80%93Shannon%E2%80%93Reeds_model
+
+  /// Riffles the shoe enough times to be well mixed. Bayer & Diaconis show
+  /// that a GSR riffle shuffle reaches total-variation mixing after
+  /// ~(3/2)*log2(n) riffles (the famous "7 shuffles for 52 cards" result);
+  /// we round up and add a small safety margin since our shoe can hold
+  /// several decks (n > 52), which need proportionally more riffles.
   static void shuffleDeck() {
-    int shuffleCount = 5 + random.nextInt(6); // [5,10]
-    SettingsGlobalValues.logger
-        .d("Number of shuffles to perform: $shuffleCount");
-    shuffleDeckXTimes(shuffleCount);
+    final int n = GameValues.deck.length;
+    if (n < 2) return;
+    final int riffleCount = (1.5 * (log(n) / log(2))).ceil() + 2;
+    SettingsGlobalValues.logger.d(
+        "Riffling $n-card shoe $riffleCount times (Gilbert-Shannon-Reeds model).");
+    for (int round = 1; round <= riffleCount; round++) {
+      GameValues.deck = gsrRiffle(GameValues.deck, random);
+      SettingsGlobalValues.logger.t(
+          "Riffle #$round: ${GameValues.deck.map((c) => c.toString()).join(', ')}");
+    }
   }
 
-  static void shuffleDeckXTimes(int shuffleCount) {
-    List<Card> deck = List.from(GameValues.deck);
-    if (!GameValues.isGameStarted &&
-        deck.isNotEmpty &&
-        deck.length != SettingsGlobalValues.deckCount.settingValue * 52) {
-      SettingsGlobalValues.logger.e("Error in deck size while shuffling");
+  /// A single Gilbert-Shannon-Reeds riffle: cut the deck into two packets
+  /// at a binomially-distributed point (a fair coin flip per card decides
+  /// which packet it starts in - an imperfect cut, not an exact half/half
+  /// split), then interleave the two packets by dropping the next card
+  /// from whichever packet has more cards remaining, weighted by their
+  /// current sizes. That weighting is the defining rule of the GSR model.
+  static List<Card> gsrRiffle(List<Card> deck, Random random) {
+    final int n = deck.length;
+    int cut = 0;
+    for (int i = 0; i < n; i++) {
+      if (random.nextBool()) cut++;
     }
-    SettingsGlobalValues.logger
-        .d("Start - Initial deck: ${deck.map((c) => c.toString()).join(', ')}");
-
-    if (deck.isEmpty) {
-      SettingsGlobalValues.logger.w("Deck empty, shuffle cancelled.");
-      GameValues.deck.addAll(GameValues.discardPile);
-      GameValues.discardPile.clear();
-    }
-
-    for (int round = 1; round <= shuffleCount; round++) {
-      SettingsGlobalValues.logger.t("\n--- Shuffle #$round ---");
-
-      if (deck.length < 8) {
-        SettingsGlobalValues.logger
-            .d("Deck too small to cut, using simple shuffle (Fisher-Yates).");
-        deck = _basicShuffle(deck, random);
-        continue;
+    final List<Card> left = deck.sublist(0, cut);
+    final List<Card> right = deck.sublist(cut);
+    final List<Card> result = [];
+    int i = left.length;
+    int j = right.length;
+    while (i > 0 || j > 0) {
+      final bool takeFromLeft;
+      if (i == 0) {
+        takeFromLeft = false;
+      } else if (j == 0) {
+        takeFromLeft = true;
+      } else {
+        takeFromLeft = random.nextDouble() < i / (i + j);
       }
-
-      List<List<Card>> subDecks = _splitDeckIntoSubDecks(deck, 4);
-      List<List<Card>> mixedSubDecks = _mixSubDecks(subDecks);
-      deck = _interlaceSubDecks(mixedSubDecks);
+      if (takeFromLeft) {
+        result.add(left[left.length - i]);
+        i--;
+      } else {
+        result.add(right[right.length - j]);
+        j--;
+      }
     }
-
-    SettingsGlobalValues.logger.t(
-        "\nFinal deck of [${deck.length}] cards after $shuffleCount shuffles: ${deck.map((c) => c.toString()).join(', ')}");
-    GameValues.deck = deck;
+    return result;
   }
 
   static List<Card> _basicShuffle(List<Card> deck, Random random) {
@@ -76,84 +104,85 @@ class DeckLogic {
       deck[i] = deck[j];
       deck[j] = temp;
     }
-    SettingsGlobalValues.logger.t(
-        "Shuffled deck (simple): ${deck.map((c) => c.toString()).join(', ')}");
     return deck;
   }
 
-  static List<List<Card>> _splitDeckIntoSubDecks(
-      List<Card> deck, int numSubDecks) {
-    List<List<Card>> subDecks = [];
-    int baseSize = (deck.length / numSubDecks).floor();
-    int remainder = deck.length % numSubDecks;
-    int currentIndex = 0;
+  // --- Continuous Shuffling Machine (CSM) ---------------------------------
+  // Model: Shuffle Master's continuous shuffler, US Patent 6,254,096
+  // ("Device and method for continuously shuffling cards") and its
+  // continuation US Patent 7,137,627 ("...and monitoring cards").
+  // https://patents.google.com/patent/US6254096B1/en
+  // https://patents.google.com/patent/US7137627B2/en
+  //
+  // The real machine holds 13-19 card compartments (17-19 "optimal" per the
+  // patent). Discarded cards are pushed one at a time into a randomly
+  // selected compartment, skipping any compartment already at its maximum
+  // load. When the dealing shoe's buffer drops low, the machine randomly
+  // selects one compartment and empties it whole into the shoe, skipping
+  // compartments holding 7 or fewer cards "to maintain reasonable shuffling
+  // speed". The patent doesn't publish the exact per-compartment maximum or
+  // the shoe's exact buffer size across all models; we use the patent's own
+  // "for example, 20 cards" buffer figure, and a fixed cap sized to
+  // comfortably hold this app's largest supported shoe (7 decks = 364
+  // cards) across 17 compartments with headroom for uneven distribution.
 
-    for (int i = 0; i < numSubDecks; i++) {
-      int currentSize = baseSize + (i < remainder ? 1 : 0);
-      int end = currentIndex + currentSize;
-      subDecks.add(deck.sublist(currentIndex, end));
-      SettingsGlobalValues.logger.t(
-          "SubDeck $i : ${deck.sublist(currentIndex, end).map((c) => c.toString()).join(', ')}");
-      currentIndex = end;
+  static const int compartmentCount = 17;
+  static const int compartmentMaxCapacity = 30;
+  static const int compartmentUnloadPreferenceThreshold = 7;
+  static const int shoeBufferTarget = 20;
+
+  static void _feedDiscardIntoShuffler() {
+    while (GameValues.discardPile.isNotEmpty) {
+      _loadCardIntoCompartment(GameValues.discardPile.removeLast());
     }
-
-    return subDecks;
   }
 
-  static List<List<Card>> _mixSubDecks(List<List<Card>> subDecks) {
-    List<List<Card>> mixedSubDecks = [];
-
-    for (int d = 0; d < subDecks.length; d++) {
-      List<Card> subDeck = subDecks[d];
-      if (subDeck.length < 2) {
-        mixedSubDecks.add(List<Card>.from(subDeck));
-        SettingsGlobalValues.logger
-            .d("SubDeck $d too small to split, unchanged.");
-        continue;
-      }
-
-      int middle = (subDeck.length / 2).ceil();
-      List<Card> firstHalf = subDeck.sublist(0, middle);
-      List<Card> secondHalf = subDeck.sublist(middle);
-
-      SettingsGlobalValues.logger.t("SubDeck $d split into:");
-      SettingsGlobalValues.logger
-          .t("- First half: ${firstHalf.map((c) => c.toString()).join(', ')}");
-      SettingsGlobalValues.logger.t(
-          "- Second half: ${secondHalf.map((c) => c.toString()).join(', ')}");
-
-      List<Card> mixed = [];
-      int i = 0, j = 0;
-      while (i < firstHalf.length || j < secondHalf.length) {
-        if (i < firstHalf.length) mixed.add(firstHalf[i++]);
-        if (j < secondHalf.length) mixed.add(secondHalf[j++]);
-      }
-
-      SettingsGlobalValues.logger.t(
-          "SubDeck $d shuffled: ${mixed.map((c) => c.toString()).join(', ')}");
-      mixedSubDecks.add(mixed);
-    }
-
-    return mixedSubDecks;
+  /// Randomly assigns [card] to a compartment, skipping any compartment
+  /// already at [compartmentMaxCapacity]. Falls back to any compartment if
+  /// every one of them is full (should not happen in practice).
+  static void _loadCardIntoCompartment(Card card) {
+    final compartments = GameValues.shufflerCompartments;
+    final eligible = [
+      for (int i = 0; i < compartments.length; i++)
+        if (compartments[i].length < compartmentMaxCapacity) i
+    ];
+    final candidates =
+        eligible.isNotEmpty ? eligible : List.generate(compartments.length, (i) => i);
+    final chosen = candidates[random.nextInt(candidates.length)];
+    compartments[chosen].add(card);
+    SettingsGlobalValues.logger
+        .t("Shuffler: loaded ${card.toString()} into compartment $chosen.");
   }
 
-  static List<Card> _interlaceSubDecks(List<List<Card>> subDecks) {
-    List<Card> finalDeck = [];
-    List<int> indices = List.filled(subDecks.length, 0);
-    bool hasCards = true;
-
-    while (hasCards) {
-      hasCards = false;
-      for (int i = 0; i < subDecks.length; i++) {
-        if (indices[i] < subDecks[i].length) {
-          finalDeck.add(subDecks[i][indices[i]++]);
-          hasCards = true;
+  /// Tops the shoe back up to [shoeBufferTarget] by randomly picking a
+  /// well-loaded compartment (more than [compartmentUnloadPreferenceThreshold]
+  /// cards, per the patent) and dumping its whole contents into the shoe.
+  /// Falls back to any non-empty compartment when nothing is well-loaded
+  /// yet (e.g. right after the machine is first loaded with a fresh shoe).
+  static void _refillShoeFromShuffler() {
+    while (GameValues.deck.length < shoeBufferTarget) {
+      final compartments = GameValues.shufflerCompartments;
+      final wellLoaded = <int>[];
+      final anyNonEmpty = <int>[];
+      for (int i = 0; i < compartments.length; i++) {
+        if (compartments[i].isEmpty) continue;
+        anyNonEmpty.add(i);
+        if (compartments[i].length > compartmentUnloadPreferenceThreshold) {
+          wellLoaded.add(i);
         }
       }
+      final candidates = wellLoaded.isNotEmpty ? wellLoaded : anyNonEmpty;
+      if (candidates.isEmpty) {
+        break; // Nothing left in the machine yet.
+      }
+      final chosen = candidates[random.nextInt(candidates.length)];
+      final cards = compartments[chosen];
+      _basicShuffle(cards, random);
+      SettingsGlobalValues.logger.d(
+          "Shuffler: emptying compartment $chosen (${cards.length} cards) into the shoe.");
+      GameValues.deck.addAll(cards);
+      cards.clear();
     }
-    SettingsGlobalValues.logger.t(
-        "Deck of [${finalDeck.length}] cards rebuilt after interlacing: ${finalDeck.map((c) => c.toString()).join(', ')}");
-    return finalDeck;
   }
 
   static Future<Card> drawCard() async {
@@ -174,97 +203,29 @@ class DeckLogic {
         const Duration(milliseconds: SettingsGlobalValues.timeBetweenDrawsMS));
   }
 
-  static void shuffleWithShuffler() {
-    if (GameValues.discardPile.length < 10) return; // Should be impossible
-
-    // Step 1: split the deck into as many piles as there are cards in the discard pile
-    final pileCount = GameValues.discardPile.length;
-    List<List<Card>> piles = List.generate(pileCount, (_) => []);
-    for (int i = 0; i < GameValues.deck.length; i++) {
-      piles[i % pileCount].add(GameValues.deck[i]);
-    }
-
-    // Step 2: sort the discard pile by cards most favorable to the dealer (countValue descending)
-    GameValues.discardPile
-        .sort((a, b) => b.getCountValue().compareTo(a.getCountValue()));
-
-    // Initial state logs
-    for (int i = 0; i < piles.length; i++) {
-      SettingsGlobalValues.logger.d(
-          "\nPile [$i] of [${piles[i].length}] cards at start of shuffle: ${piles[i].map((c) => c.toString()).join(', ')}");
-    }
-    SettingsGlobalValues.logger.d(
-        "\nDeck of [${GameValues.deck.length}] cards at start of shuffle: ${GameValues.deck.map((c) => c.toString()).join(', ')}");
-    SettingsGlobalValues.logger.d(
-        "\nDiscard pile of [${GameValues.discardPile.length}] cards at start of shuffle: ${GameValues.discardPile.map((c) => c.toString()).join(', ')}");
-
-    // Step 3: compute the local running count of each pile
-    List<int> pileLocalCounts = List<int>.generate(piles.length, (i) {
-      int local = 0;
-      for (final c in piles[i]) {
-        local += c.getCountValue();
-      }
-      return local;
-    });
-
-    // Build a list of pile indices sorted by localCount descending
-    List<int> pileIndices = List<int>.generate(piles.length, (i) => i);
-    pileIndices
-        .sort((i, j) => pileLocalCounts[j].compareTo(pileLocalCounts[i]));
-
-    // Cards sorted by countValue descending (already sorted above)
-    final int n = min(GameValues.discardPile.length, piles.length);
-
-    // Step 4: optimal one-to-one pairing (card[k] -> pileIndices[k])
-    for (int k = 0; k < n; k++) {
-      final card = GameValues.discardPile[k];
-      final int targetPileIndex = pileIndices[k];
-
-      // Defensive recomputation of beforeCount if you want the exact log at time t
-      int beforeCount = 0;
-      for (final c in piles[targetPileIndex]) {
-        beforeCount += c.getCountValue();
-      }
-
-      // Log avant insertion
-      SettingsGlobalValues.logger.t(
-          "shuffleWithShuffler[card=${card.getCardValue()},value=${card.getTrueValue()},countValue=${card.getCountValue()},"
-          "pileIndex=$targetPileIndex,pileCountBefore=$beforeCount,pileCountAfter=${beforeCount + card.getCountValue()}]");
-
-      // Insertion: here in the middle of the pile (kept)
-      piles[targetPileIndex]
-          .insert((piles[targetPileIndex].length / 2).floor(), card);
-    }
-
-    // Step 5: merge the piles into a new deck
-    GameValues.deck = piles.expand((pile) => pile).toList();
-
-    // Empty the discard pile (cards have been reassigned)
-    GameValues.discardPile.clear();
-
-    // Final state logs
-    for (int i = 0; i < piles.length; i++) {
-      SettingsGlobalValues.logger.d(
-          "\nPile [$i] of [${piles[i].length}] cards at end of shuffle: ${piles[i].map((c) => c.toString()).join(', ')}");
-    }
-    SettingsGlobalValues.logger.d(
-        "\nDeck of [${GameValues.deck.length}] cards at end of shuffle: ${GameValues.deck.map((c) => c.toString()).join(', ')}");
-    SettingsGlobalValues.logger.d(
-        "\nDiscard pile of [${GameValues.discardPile.length}] cards at end of shuffle: ${GameValues.discardPile.map((c) => c.toString()).join(', ')}");
-  }
-
-  static int getSum(int i, int j) {
-    return i + j;
-  }
-
-  static addCardsToDeck() {
+  static void addCardsToDeck() {
+    final freshCards = <Card>[];
     for (int i = 0; i < SettingsGlobalValues.deckCount.settingValue; i++) {
       for (Color color in Color.values) {
         for (int value = 1; value <= 13; value++) {
-          GameValues.deck.add(Card(value, color));
+          freshCards.add(Card(value, color));
         }
       }
     }
-    shuffleDeckXTimes(50 + random.nextInt(950));
+
+    if (SettingsGlobalValues.useShuffler.settingValue) {
+      // Mirrors an attendant loading fresh decks into the machine: cards go
+      // straight into random compartments and the shoe starts empty, then
+      // primes itself from the compartments (see _refillShoeFromShuffler).
+      GameValues.shufflerCompartments =
+          List.generate(compartmentCount, (_) => []);
+      for (final card in freshCards) {
+        _loadCardIntoCompartment(card);
+      }
+      _refillShoeFromShuffler();
+    } else {
+      GameValues.deck.addAll(freshCards);
+      shuffleDeck();
+    }
   }
 }
