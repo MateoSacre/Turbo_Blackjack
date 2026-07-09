@@ -33,7 +33,7 @@ class GameLogic {
     if (GameValues.player.hands.any((hand) => hand.bet <= 0)) {
       return false;
     }
-    return getTotalBet() <= GameValues.tokens + 0.0001;
+    return getTotalBet() * 2 <= GameValues.tokens;
   }
 
   static bool canIncreaseBet(Hand hand) {
@@ -43,7 +43,7 @@ class GameLogic {
     if (!GameValues.player.hands.contains(hand)) {
       return false;
     }
-    return getTotalBet() + 1 <= GameValues.tokens.floor();
+    return (getTotalBet() + 1) * 2 <= GameValues.tokens;
   }
 
   static bool canDecreaseBet(Hand hand) {
@@ -53,8 +53,9 @@ class GameLogic {
     return hand.bet > 0;
   }
 
-  static double getInsuranceCost(Hand hand) {
-    return hand.bet / 2;
+  // In half-token units: bet/2 tokens == bet half-tokens.
+  static int getInsuranceCost(Hand hand) {
+    return hand.bet;
   }
 
   static bool canTakeInsurance(Hand hand) {
@@ -71,7 +72,7 @@ class GameLogic {
         GameValues.dealerHand.cards.first.getTrueValue() != 1) {
       return false;
     }
-    return GameValues.tokens + 0.0001 >= getInsuranceCost(hand);
+    return GameValues.tokens >= getInsuranceCost(hand);
   }
 
   static void takeInsurance(Hand hand) {
@@ -93,7 +94,7 @@ class GameLogic {
     if (hand.isSurrender) {
       return false;
     }
-    return GameValues.tokens + 0.0001 >= hand.bet;
+    return GameValues.tokens >= hand.bet * 2;
   }
 
   static startNewGame() async {
@@ -105,7 +106,7 @@ class GameLogic {
 
     GameValues.isGameStarted = true;
     final int totalBet = getTotalBet();
-    GameValues.tokens -= totalBet;
+    GameValues.tokens -= totalBet * 2;
 
     for (Hand hand in GameValues.player.hands) {
       hand.cards.add(await DeckLogic.drawCard());
@@ -114,7 +115,7 @@ class GameLogic {
     for (Hand hand in GameValues.player.hands) {
       hand.cards.add(await DeckLogic.drawCard());
     }
-    nextHandOrEnd();
+    await nextHandOrEnd();
   }
 
   static Future<void> endGame() async {
@@ -154,7 +155,7 @@ class GameLogic {
         GameValues.nbSplitInGame++;
         SettingsGlobalValues.logger
             .d("Splitted hand ${GameValues.currentHandIndex}, hitting");
-        hit(GameValues.player.hands[GameValues.currentHandIndex]);
+        await hit(GameValues.player.hands[GameValues.currentHandIndex]);
       } else if (isBlackjack()) {
         SettingsGlobalValues.logger
             .d("BlackJack for hand ${GameValues.currentHandIndex}");
@@ -224,7 +225,7 @@ class GameLogic {
           "Cannot double hand ${GameValues.currentHandIndex} due to conditions");
       return;
     }
-    GameValues.tokens -= hand.bet;
+    GameValues.tokens -= hand.bet * 2;
     hand.bet *= 2;
     SettingsGlobalValues.logger
         .d("Doubling hand ${GameValues.currentHandIndex} to bet ${hand.bet}");
@@ -257,7 +258,7 @@ class GameLogic {
       return false;
     }
     Hand hand = GameValues.player.hands[GameValues.currentHandIndex];
-    if (GameValues.tokens + 0.0001 < hand.bet) {
+    if (GameValues.tokens < hand.bet * 2) {
       return false;
     }
     return hand.cards.every((card) => card.value == hand.cards.first.value);
@@ -272,7 +273,7 @@ class GameLogic {
             "Cannot split hand ${GameValues.currentHandIndex} due to conditions");
         return;
       }
-      GameValues.tokens -= hand.bet;
+      GameValues.tokens -= hand.bet * 2;
       Hand splittedHand = Hand();
       splittedHand.isSplitted = true;
       splittedHand.isPlayed = true;
@@ -387,19 +388,21 @@ class GameLogic {
         continue;
       }
 
+      // Payouts below are expressed in half-token units: pay = bet(tokens)
+      // * multiplier * 2, e.g. a 3:2 blackjack payout is hand.bet * 5.
       final status = getVictoryStatus(GameValues.dealerHand, hand);
       switch (status) {
         case VictoryStatus.blackJack:
-          GameValues.tokens += hand.bet * 2.5;
+          GameValues.tokens += hand.bet * 5;
           break;
         case VictoryStatus.win:
-          GameValues.tokens += hand.bet * 2;
+          GameValues.tokens += hand.bet * 4;
           break;
         case VictoryStatus.draw:
-          GameValues.tokens += hand.bet.toDouble();
+          GameValues.tokens += hand.bet * 2;
           break;
         case VictoryStatus.surrender:
-          GameValues.tokens += hand.bet / 2;
+          GameValues.tokens += hand.bet;
           break;
         case VictoryStatus.bust:
         case VictoryStatus.lost:
@@ -414,7 +417,7 @@ class GameLogic {
       hand.insuranceBet = 0;
     }
 
-    if (GameValues.tokens <= 0.0001) {
+    if (GameValues.tokens <= 0) {
       GameValues.tokens += GameValues.bankruptcyRefillTokens;
       GameValues.bankruptcyCount++;
     }

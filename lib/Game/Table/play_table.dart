@@ -224,7 +224,7 @@ class PlayTableState extends State<PlayTable> {
                 ),
               if (hand.insuranceBet > 0)
                 Text(
-                  'Insurance: ${_formatTokens(hand.insuranceBet)}',
+                  'Insurance: ${_formatTokens(hand.insuranceBet / 2)}',
                   style: TextStyle(
                       color: SettingsGlobalValues.neutralColor,
                       fontSize: SettingsGlobalValues.getFontSize(context)),
@@ -262,7 +262,7 @@ class PlayTableState extends State<PlayTable> {
             child: Column(
               children: [
                 Text(
-                  'Tokens: ${_formatTokens(GameValues.tokens)}',
+                  'Tokens: ${_formatTokens(GameValues.tokens / 2)}',
                   style: TextStyle(
                       color: SettingsGlobalValues.neutralColor,
                       fontWeight: FontWeight.bold,
@@ -540,9 +540,11 @@ class PlayTableState extends State<PlayTable> {
                 ? SettingsGlobalValues.positiveColor
                 : SettingsGlobalValues.secondColor,
           ),
-          child: const Text(
+          child: Text(
             'Restart Game',
-            style: TextStyle(color: SettingsGlobalValues.neutralColor),
+            style: TextStyle(
+                color: SettingsGlobalValues.neutralColor,
+                fontSize: SettingsGlobalValues.getFontSize(context)),
           ),
         ),
         ElevatedButton(
@@ -553,9 +555,11 @@ class PlayTableState extends State<PlayTable> {
           style: ElevatedButton.styleFrom(
             backgroundColor: SettingsGlobalValues.positiveColor,
           ),
-          child: const Text(
+          child: Text(
             'End Game',
-            style: TextStyle(color: SettingsGlobalValues.neutralColor),
+            style: TextStyle(
+                color: SettingsGlobalValues.neutralColor,
+                fontSize: SettingsGlobalValues.getFontSize(context)),
           ),
         ),
       ];

@@ -6,10 +6,13 @@ class GameValues {
   static Player dealer = Player(Hand());
   static Hand dealerHand = dealer.hands[0];
 
-  static const double initialTokens = 100;
-  static const double bankruptcyRefillTokens = 10;
+  // Tokens are tracked internally in half-token units (e.g. 200 == 100
+  // tokens) so bets, insurance and payouts stay integers and comparisons
+  // never need floating-point epsilons. Divide by 2 for display.
+  static const int initialTokens = 200;
+  static const int bankruptcyRefillTokens = 20;
 
-  static double tokens = initialTokens;
+  static int tokens = initialTokens;
   static int bankruptcyCount = 0;
 
   static List<Card> deck = [];
@@ -41,7 +44,8 @@ class Hand {
   bool isSplitted = false;
   bool isSurrender = false;
   int bet = 0;
-  double insuranceBet = 0;
+  // Half-token units, see GameValues.tokens.
+  int insuranceBet = 0;
 
   int getValue() {
     int result = 0;
