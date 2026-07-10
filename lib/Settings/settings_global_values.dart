@@ -101,11 +101,20 @@ class SettingsGlobalValues {
   static int MEDIUM = 1;
   static int BIG = 2;
 
+  // Classified by the shortest side of the window, not width/height
+  // independently: checking each axis on its own (the old logic) means a
+  // window that's narrow-but-tall or wide-but-short gets misclassified by
+  // whichever single dimension happens to cross a threshold, and a phone
+  // rotated to landscape can flip classification even though its usable
+  // (shortest-side) space didn't change. Using the shortest side is
+  // orientation-stable and reflects the dimension that actually
+  // constrains how many cards/buttons fit.
   static getScreenSize(BuildContext context) {
-    double width = MediaQuery.sizeOf(context).width;
-    double height = MediaQuery.sizeOf(context).height;
-    return (width >= 1000) || (height >=900) ? BIG :
-    ((width <= 500) || (height <=400) ? SMALL : MEDIUM);
+    final size = MediaQuery.sizeOf(context);
+    final double shortestSide = size.width < size.height ? size.width : size.height;
+    if (shortestSide >= bigScreenShortestSide) return BIG;
+    if (shortestSide <= smallScreenShortestSide) return SMALL;
+    return MEDIUM;
   }
 
   static getCardHeight(BuildContext context) {
@@ -174,6 +183,12 @@ class SettingsGlobalValues {
   static const Color goldColor = Color(0xffffd700);
   static const Color activeColor = Color(0xff2873b0);
   static const Color darkColor = Color(0xff000000);
+
+  // Shortest-side breakpoints for getScreenSize(), tuned so phones (~360-430
+  // logical px wide) land in SMALL in either orientation and tablets/desktop
+  // windows (~768+ shortest side) land in BIG in either orientation.
+  static const double bigScreenShortestSide = 700;
+  static const double smallScreenShortestSide = 420;
 
   static const double globalEdgeInset = 10;
   static const double playerCardWidthSmall = 75;

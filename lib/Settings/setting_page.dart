@@ -134,13 +134,15 @@ class SettingsPageState extends State<SettingsPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child: Text(
-            setting.settingName,
-            style: TextStyle(
-                color: SettingsGlobalValues.neutralColor,
-                fontSize: SettingsGlobalValues.getFontSize(context)),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Text(
+              setting.settingName,
+              style: TextStyle(
+                  color: SettingsGlobalValues.neutralColor,
+                  fontSize: SettingsGlobalValues.getFontSize(context)),
+            ),
           ),
         ),
         Switch(
@@ -163,13 +165,15 @@ class SettingsPageState extends State<SettingsPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child: Text(
-            setting.settingName,
-            style: TextStyle(
-                color: SettingsGlobalValues.neutralColor,
-                fontSize: SettingsGlobalValues.getFontSize(context)),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Text(
+              setting.settingName,
+              style: TextStyle(
+                  color: SettingsGlobalValues.neutralColor,
+                  fontSize: SettingsGlobalValues.getFontSize(context)),
+            ),
           ),
         ),
         Switch(
