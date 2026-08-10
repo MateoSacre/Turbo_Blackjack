@@ -178,7 +178,7 @@ class SettingsGlobalValues {
   static const Color secondColor = Color(0xFF475B63);
   static const Color positiveColor = Color(0xFF339C29);
   static const Color negativeColor = Color(0xFFF42C04);
-  static const Color orangeColor = Color(0xFFF42C04);
+  static const Color orangeColor = Color(0xFFF4900C);
   static const Color neutralColor = Color(0xFFFFFFFF);
   static const Color goldColor = Color(0xffffd700);
   static const Color activeColor = Color(0xff2873b0);

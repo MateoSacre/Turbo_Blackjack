@@ -342,6 +342,7 @@ class GameLogic {
         historyHand.cards.add(card);
       }
       historyHand.isSurrender = hand.isSurrender;
+      historyHand.isSplitted = hand.isSplitted;
       historyHand.bet = hand.bet;
       historyHand.insuranceBet = hand.insuranceBet;
       historyGame.playerHands.add(historyHand);
