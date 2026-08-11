@@ -8,6 +8,7 @@ import 'package:turbo_blackjack/Settings/settings_global_values.dart';
 
 import '../Data/game_values.dart';
 import '../Logic/game_logic.dart';
+import 'playing_card_widget.dart';
 
 class PlayTable extends StatefulWidget {
   const PlayTable({super.key});
@@ -179,6 +180,59 @@ class PlayTableState extends State<PlayTable> {
     );
   }
 
+  Widget _buildCardStack(Hand hand, BuildContext context) {
+    final cards = hand.cards;
+    if (cards.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return LayoutBuilder(builder: (context, constraints) {
+      final double preferredHeight =
+          SettingsGlobalValues.getMiniCardHeight(context);
+      final double maxHeight =
+          constraints.maxHeight.isFinite ? constraints.maxHeight : preferredHeight;
+      final double cardHeight =
+          preferredHeight > maxHeight ? maxHeight : preferredHeight;
+      final double cardWidth = cardHeight * PlayingCardWidget.aspectRatio;
+      final double maxWidth = constraints.maxWidth;
+
+      // Cards overlap by default (fanned stack); shrink the overlap further
+      // if there isn't enough room to fit every card at that spacing.
+      double offset = cardWidth * 0.45;
+      if (cards.length > 1) {
+        final double fitOffset = (maxWidth - cardWidth) / (cards.length - 1);
+        if (fitOffset < offset) {
+          offset = fitOffset < 0 ? 0 : fitOffset;
+        }
+      }
+
+      final double stackWidth = cardWidth + offset * (cards.length - 1);
+      final double startX = ((maxWidth - stackWidth) / 2)
+          .clamp(0, double.infinity)
+          .toDouble();
+
+      return SizedBox(
+        width: maxWidth,
+        height: cardHeight,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            for (int i = 0; i < cards.length; i++)
+              Positioned(
+                left: startX + offset * i,
+                top: 0,
+                child: PlayingCardWidget(
+                  card: cards[i],
+                  width: cardWidth,
+                  height: cardHeight,
+                ),
+              ),
+          ],
+        ),
+      );
+    });
+  }
+
   Widget _buildPositionFromHand(Hand hand) {
     return GestureDetector(
       child: Container(
@@ -202,13 +256,7 @@ class PlayTableState extends State<PlayTable> {
         child: Center(
           child: Column(
             children: [
-              Expanded(
-                  child: Text(
-                hand.getCardsValues().join(' '),
-                style: TextStyle(
-                    color: SettingsGlobalValues.neutralColor,
-                    fontSize: SettingsGlobalValues.getFontSize(context)),
-              )),
+              Expanded(child: _buildCardStack(hand, context)),
               if (SettingsGlobalValues.showBestOption.settingValue &&
                   GameValues.isGameStarted &&
                   !GameValues.isGameEnded &&

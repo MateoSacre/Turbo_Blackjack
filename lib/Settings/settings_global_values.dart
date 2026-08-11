@@ -139,6 +139,17 @@ class SettingsGlobalValues {
     }
   }
 
+  static double getMiniCardHeight(BuildContext context) {
+    switch(getScreenSize(context)){
+      case 0 :
+        return miniCardHeightSmall;
+      case 1 :
+        return miniCardHeightMedium;
+      default :
+        return miniCardHeightBig;
+    }
+  }
+
   static getFontSize(BuildContext context) {
     switch(getScreenSize(context)){
       case 0 :
@@ -197,6 +208,9 @@ class SettingsGlobalValues {
   static const double playerCardHeightMedium = 176;
   static const double playerCardWidthBig = 200;
   static const double playerCardHeightBig = 293;
+  static const double miniCardHeightSmall = 42;
+  static const double miniCardHeightMedium = 64;
+  static const double miniCardHeightBig = 100;
   static const double bigIconSize = 75;
   static const double mediumIconSize = 50;
   static const double smallIconSize = 25;
