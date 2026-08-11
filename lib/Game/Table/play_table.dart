@@ -185,6 +185,8 @@ class PlayTableState extends State<PlayTable> {
     if (cards.isEmpty) {
       return const SizedBox.shrink();
     }
+    final int hiddenIndex =
+        GameLogic.shouldHideDoubleCard(hand) ? cards.length - 1 : -1;
 
     return LayoutBuilder(builder: (context, constraints) {
       final double preferredHeight =
@@ -225,6 +227,7 @@ class PlayTableState extends State<PlayTable> {
                   card: cards[i],
                   width: cardWidth,
                   height: cardHeight,
+                  faceDown: i == hiddenIndex,
                 ),
               ),
           ],
@@ -279,7 +282,9 @@ class PlayTableState extends State<PlayTable> {
                       fontSize: SettingsGlobalValues.getFontSize(context)),
                 ),
               Text(
-                hand.getValue() == 0 ? '' : hand.getValue().toString(),
+                GameLogic.shouldHideDoubleCard(hand)
+                    ? '?'
+                    : (hand.getValue() == 0 ? '' : hand.getValue().toString()),
                 style: TextStyle(
                     color: SettingsGlobalValues.neutralColor,
                     fontSize: SettingsGlobalValues.getFontSize(context)),
@@ -622,6 +627,27 @@ class PlayTableState extends State<PlayTable> {
       return buttons;
     }
     if (GameValues.isGameEnded && GameValues.isGameStarted) {
+      if (GameLogic.hasHiddenDoubledHands() &&
+          !GameValues.doubleCardsRevealed) {
+        return [
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                GameValues.doubleCardsRevealed = true;
+              });
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: SettingsGlobalValues.activeColor,
+            ),
+            child: Text(
+              'Reveal',
+              style: TextStyle(
+                  color: SettingsGlobalValues.neutralColor,
+                  fontSize: SettingsGlobalValues.getFontSize(context)),
+            ),
+          ),
+        ];
+      }
       final bool canRestart = GameLogic.canStartGame();
       return [
         ElevatedButton(
@@ -675,6 +701,10 @@ class PlayTableState extends State<PlayTable> {
         return SettingsGlobalValues.positiveColor;
       } else if (handIndex > GameValues.currentHandIndex) {
         return SettingsGlobalValues.secondColor;
+      } else if (GameLogic.shouldHideDoubleCard(hand)) {
+        // Don't leak the bust/no-bust outcome through the box color while
+        // the doubled card is still hidden.
+        return SettingsGlobalValues.secondColor;
       } else {
         if (hand.getValue() > 21) {
           return SettingsGlobalValues.negativeColor;
@@ -683,6 +713,11 @@ class PlayTableState extends State<PlayTable> {
         }
       }
     } else if (GameValues.isGameStarted && GameValues.isGameEnded) {
+      if (GameLogic.shouldHideDoubleCard(hand)) {
+        // Round is over but the player hasn't hit "Reveal" yet: keep the
+        // outcome color hidden along with the card and total.
+        return SettingsGlobalValues.secondColor;
+      }
       switch (GameLogic.getVictoryStatus(GameValues.dealerHand, hand)) {
         case VictoryStatus.blackJack:
           return SettingsGlobalValues.goldColor;

@@ -26,6 +26,9 @@ class GameValues {
   static bool isGameStarted = false;
   static bool isGameEnded = false;
   static bool waitingForInsuranceDecision = false;
+  // Gates the reveal of hidden double-down cards behind an explicit player
+  // action once the round ends, instead of auto-revealing immediately.
+  static bool doubleCardsRevealed = false;
 
   static int currentHandIndex = -1;
   static int nbSplitInGame = 0;
@@ -49,6 +52,7 @@ class Hand {
   bool isPlayed = false;
   bool isSplitted = false;
   bool isSurrender = false;
+  bool isDoubled = false;
   int bet = 0;
   // Half-token units, see GameValues.tokens.
   int insuranceBet = 0;
@@ -83,6 +87,7 @@ class Hand {
     cards.clear();
     isSplitted = false;
     isSurrender = false;
+    isDoubled = false;
     insuranceBet = 0;
     if (!keepBet) {
       bet = 0;

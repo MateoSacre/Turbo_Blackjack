@@ -29,6 +29,7 @@ class SettingsPageState extends State<SettingsPage> {
       result.add(getOptionSliderWithValues(
           SettingsGlobalValues.startingTokens, 10, 500, 49));
       result.add(getOptionBoolean(SettingsGlobalValues.useShuffler));
+      result.add(getOptionBoolean(SettingsGlobalValues.hideDoubleDownCard));
     });
     return result;
   }

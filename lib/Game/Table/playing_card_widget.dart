@@ -2,27 +2,35 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../Settings/settings_global_values.dart';
 import '../Data/card.dart' as card_model;
 
 // Small vector-drawn playing card (rank + suit in opposite corners, big
 // suit glyph centered) used to render a hand as a fan of real cards
-// instead of a plain "A♥ 10♠" text string.
+// instead of a plain "A♥ 10♠" text string. Can also render a face-down
+// back (see [faceDown]) for cards that must stay hidden from the player.
 class PlayingCardWidget extends StatelessWidget {
   static const double aspectRatio = 0.68; // width / height
 
   final card_model.Card card;
   final double width;
   final double height;
+  final bool faceDown;
 
   const PlayingCardWidget({
     super.key,
     required this.card,
     required this.width,
     required this.height,
+    this.faceDown = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (faceDown) {
+      return _buildBack();
+    }
+
     final bool isRed = card.color == card_model.Color.heart ||
         card.color == card_model.Color.diamond;
     final Color suitColor =
@@ -68,6 +76,46 @@ class PlayingCardWidget extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildBack() {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: SettingsGlobalValues.activeColor,
+        borderRadius: BorderRadius.circular(width * 0.14),
+        border: Border.all(color: SettingsGlobalValues.goldColor, width: 1.5),
+        boxShadow: const [
+          BoxShadow(
+              color: Color(0x40000000), blurRadius: 3, offset: Offset(1, 2)),
+        ],
+      ),
+      child: Center(
+        child: Container(
+          width: width * 0.6,
+          height: height * 0.6,
+          decoration: BoxDecoration(
+            border:
+                Border.all(color: SettingsGlobalValues.goldColor, width: 1),
+            borderRadius: BorderRadius.circular(width * 0.08),
+          ),
+          child: Center(
+            child: Transform.rotate(
+              angle: math.pi / 4,
+              child: Container(
+                width: width * 0.26,
+                height: width * 0.26,
+                decoration: BoxDecoration(
+                  color: SettingsGlobalValues.goldColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

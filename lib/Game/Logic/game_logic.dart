@@ -118,6 +118,25 @@ class GameLogic {
         "Insurance of $insuranceCost taken for hand ${GameValues.currentHandIndex}");
   }
 
+  // The card drawn on a double (and the hand's running total) stay hidden
+  // from the player until the round is fully resolved AND the player has
+  // explicitly hit "Reveal", so doubling carries the same suspense as a
+  // real "double down blind" table rule right up to that final moment.
+  static bool shouldHideDoubleCard(Hand hand) {
+    if (!SettingsGlobalValues.hideDoubleDownCard.settingValue ||
+        !hand.isDoubled) {
+      return false;
+    }
+    return !GameValues.isGameEnded || !GameValues.doubleCardsRevealed;
+  }
+
+  static bool hasHiddenDoubledHands() {
+    if (!SettingsGlobalValues.hideDoubleDownCard.settingValue) {
+      return false;
+    }
+    return GameValues.player.hands.any((hand) => hand.isDoubled);
+  }
+
   static bool canDoubleCurrentHand() {
     if (!isFirstTurnForHand()) {
       return false;
@@ -137,6 +156,7 @@ class GameLogic {
     }
 
     GameValues.isGameStarted = true;
+    GameValues.doubleCardsRevealed = false;
     final int totalBet = getTotalBet();
     GameValues.tokens -= totalBet * 2;
 
@@ -170,6 +190,7 @@ class GameLogic {
     GameValues.isGameStarted = false;
     GameValues.isGameEnded = false;
     GameValues.waitingForInsuranceDecision = false;
+    GameValues.doubleCardsRevealed = false;
     for (Card card in GameValues.dealerHand.cards) {
       GameValues.discardPile.add(card);
     }
@@ -281,6 +302,7 @@ class GameLogic {
     }
     GameValues.tokens -= hand.bet * 2;
     hand.bet *= 2;
+    hand.isDoubled = true;
     SettingsGlobalValues.logger
         .d("Doubling hand ${GameValues.currentHandIndex} to bet ${hand.bet}");
     hand.cards.add(await DeckLogic.drawCard());

@@ -31,6 +31,10 @@ class SettingsGlobalValues {
       settingName: "Use Shuffler",
       settingValue: false,
       doesChangeNeedReload: true);
+  static BoolSetting hideDoubleDownCard = BoolSetting(
+      settingName: "Hide Double-Down Card Until Reveal",
+      settingValue: false,
+      doesChangeNeedReload: false);
 
   static Map<String, dynamic> toJson() {
     return {
@@ -40,6 +44,7 @@ class SettingsGlobalValues {
       'showBestOption': showBestOption.toJson(),
       'showBestOptionAsPopup': showBestOptionAsPopup.toJson(),
       'useShuffler': useShuffler.toJson(),
+      'hideDoubleDownCard': hideDoubleDownCard.toJson(),
     };
   }
 
@@ -56,6 +61,10 @@ class SettingsGlobalValues {
         BoolSetting.fromJson(json['showBestOptionAsPopup']);
     SettingsGlobalValues.useShuffler =
         BoolSetting.fromJson(json['useShuffler']);
+    if (json.containsKey('hideDoubleDownCard')) {
+      SettingsGlobalValues.hideDoubleDownCard =
+          BoolSetting.fromJson(json['hideDoubleDownCard']);
+    }
 
     return SettingsGlobalValues();
   }
@@ -85,6 +94,10 @@ class SettingsGlobalValues {
         showBestOptionAsPopup =
             BoolSetting.fromJson(jsonData['showBestOptionAsPopup']);
         useShuffler = BoolSetting.fromJson(jsonData['useShuffler']);
+        if (jsonData.containsKey('hideDoubleDownCard')) {
+          hideDoubleDownCard =
+              BoolSetting.fromJson(jsonData['hideDoubleDownCard']);
+        }
       }
     } catch (e) {
       logger.w("Error while loading settings: $e");
