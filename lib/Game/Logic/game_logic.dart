@@ -53,6 +53,35 @@ class GameLogic {
     return hand.bet > 0;
   }
 
+  // Step size grows by a power of 10 every time the bet crosses one:
+  // 1-by-1 below 10, 10-by-10 below 100, 100-by-100 below 1000, etc.
+  // This lets a press-and-hold on the bet buttons place large bets quickly.
+  static int _stepForValue(int value) {
+    int step = 1;
+    while (step * 10 <= value) {
+      step *= 10;
+    }
+    return step;
+  }
+
+  static int getBetIncreaseStep(Hand hand) {
+    if (!canIncreaseBet(hand)) {
+      return 0;
+    }
+    final int step = _stepForValue(hand.bet);
+    final int maxTotal = GameValues.tokens ~/ 2;
+    final int remaining = maxTotal - getTotalBet();
+    return step > remaining ? remaining : step;
+  }
+
+  static int getBetDecreaseStep(Hand hand) {
+    if (!canDecreaseBet(hand)) {
+      return 0;
+    }
+    final int step = _stepForValue(hand.bet - 1);
+    return step > hand.bet ? hand.bet : step;
+  }
+
   // In half-token units: bet/2 tokens == bet half-tokens.
   static int getInsuranceCost(Hand hand) {
     return hand.bet;

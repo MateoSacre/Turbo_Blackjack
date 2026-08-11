@@ -18,6 +18,8 @@ class PlayTable extends StatefulWidget {
 
 class PlayTableState extends State<PlayTable> {
   late Timer _timer;
+  Timer? _betHoldDelayTimer;
+  Timer? _betHoldRepeatTimer;
 
   PlayTableState() {
     GameValues.deck.clear();
@@ -37,7 +39,62 @@ class PlayTableState extends State<PlayTable> {
   @override
   void dispose() {
     _timer.cancel();
+    _stopBetHold();
     super.dispose();
+  }
+
+  void _startBetHold(void Function() applyStep) {
+    _stopBetHold();
+    applyStep();
+    _betHoldDelayTimer = Timer(const Duration(milliseconds: 400), () {
+      _betHoldRepeatTimer =
+          Timer.periodic(const Duration(milliseconds: 100), (_) {
+        applyStep();
+      });
+    });
+  }
+
+  void _stopBetHold() {
+    _betHoldDelayTimer?.cancel();
+    _betHoldRepeatTimer?.cancel();
+    _betHoldDelayTimer = null;
+    _betHoldRepeatTimer = null;
+  }
+
+  Widget _buildBetStepButton(Hand hand, {required bool isIncrease}) {
+    final bool enabled = isIncrease
+        ? GameLogic.canIncreaseBet(hand)
+        : GameLogic.canDecreaseBet(hand);
+
+    void applyStep() {
+      final int step = isIncrease
+          ? GameLogic.getBetIncreaseStep(hand)
+          : GameLogic.getBetDecreaseStep(hand);
+      if (step <= 0) {
+        _stopBetHold();
+        return;
+      }
+      setState(() {
+        hand.bet += isIncrease ? step : -step;
+      });
+    }
+
+    return SizedBox(
+      height: SettingsGlobalValues.getIconSize(context),
+      width: SettingsGlobalValues.getIconSize(context),
+      child: GestureDetector(
+        onTapDown: enabled ? (_) => _startBetHold(applyStep) : null,
+        onTapUp: (_) => _stopBetHold(),
+        onTapCancel: _stopBetHold,
+        child: Icon(
+          isIncrease ? Icons.add : Icons.remove,
+          color: enabled
+              ? SettingsGlobalValues.neutralColor
+              : SettingsGlobalValues.neutralColor.withValues(alpha: .3),
+          size: SettingsGlobalValues.getIconSize(context),
+        ),
+      ),
+    );
   }
 
   @override
@@ -108,44 +165,8 @@ class PlayTableState extends State<PlayTable> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            SizedBox(
-                              height: SettingsGlobalValues.getIconSize(context),
-                              width: SettingsGlobalValues.getIconSize(context),
-                              child: IconButton(
-                                icon: Icon(Icons.remove,
-                                    color: SettingsGlobalValues.neutralColor,
-                                    size: SettingsGlobalValues.getIconSize(
-                                        context)),
-                                padding: const EdgeInsets.all(0),
-                                onPressed: GameLogic.canDecreaseBet(hand)
-                                    ? () {
-                                        setState(() {
-                                          if (hand.bet > 0) {
-                                            hand.bet--;
-                                          }
-                                        });
-                                      }
-                                    : null,
-                              ),
-                            ),
-                            SizedBox(
-                              height: SettingsGlobalValues.getIconSize(context),
-                              width: SettingsGlobalValues.getIconSize(context),
-                              child: IconButton(
-                                icon: Icon(Icons.add,
-                                    color: SettingsGlobalValues.neutralColor,
-                                    size: SettingsGlobalValues.getIconSize(
-                                        context)),
-                                padding: const EdgeInsets.all(0),
-                                onPressed: GameLogic.canIncreaseBet(hand)
-                                    ? () {
-                                        setState(() {
-                                          hand.bet++;
-                                        });
-                                      }
-                                    : null,
-                              ),
-                            )
+                            _buildBetStepButton(hand, isIncrease: false),
+                            _buildBetStepButton(hand, isIncrease: true),
                           ],
                         ),
                     ],
