@@ -8,6 +8,7 @@ import 'package:turbo_blackjack/Settings/settings_global_values.dart';
 
 import '../Data/game_values.dart';
 import '../Logic/game_logic.dart';
+import 'card_pile_widget.dart';
 import 'playing_card_widget.dart';
 
 class PlayTable extends StatefulWidget {
@@ -383,13 +384,38 @@ class PlayTableState extends State<PlayTable> {
   }
 
   getTable() {
+    final int maxPileCount = SettingsGlobalValues.deckCount.settingValue * 52;
     return [
-      // Dealer position
+      // Dealer position, flanked by the shoe (deck) and discard tray.
       Padding(
         padding: const EdgeInsets.all(40.0),
-        child: GameValues.isGameStarted
-            ? _buildPositionFromHand(GameValues.dealerHand)
-            : _buildPosition("D", Hand()),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(right: 12.0),
+              child: CardPileWidget(
+                label: 'Discard',
+                count: GameValues.discardPile.length,
+                maxCount: maxPileCount,
+                cardWidth: SettingsGlobalValues.getPileWidth(context),
+              ),
+            ),
+            GameValues.isGameStarted
+                ? _buildPositionFromHand(GameValues.dealerHand)
+                : _buildPosition("D", Hand()),
+            Padding(
+              padding: const EdgeInsets.only(left: 12.0),
+              child: CardPileWidget(
+                label: 'Deck',
+                count: DeckLogic.getEffectiveDeckCount(),
+                maxCount: maxPileCount,
+                cardWidth: SettingsGlobalValues.getPileWidth(context),
+              ),
+            ),
+          ],
+        ),
       ),
       // Player's Hands
       Expanded(

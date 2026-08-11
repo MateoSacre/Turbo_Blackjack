@@ -20,6 +20,21 @@ import '../Notifier/deck_notifier.dart';
 class DeckLogic {
   static final random = Random();
 
+  // With the shuffler on, GameValues.deck is just the small dealing-shoe
+  // buffer (see shoeBufferTarget) - most undealt cards actually sit in the
+  // machine's compartments. This is the count that should back a "how much
+  // is left to deal" display, since the shoe buffer alone understates it.
+  static int getEffectiveDeckCount() {
+    if (!SettingsGlobalValues.useShuffler.settingValue) {
+      return GameValues.deck.length;
+    }
+    int total = GameValues.deck.length;
+    for (final compartment in GameValues.shufflerCompartments) {
+      total += compartment.length;
+    }
+    return total;
+  }
+
   static void checkForDeckShuffle() {
     if (SettingsGlobalValues.useShuffler.settingValue) {
       _feedDiscardIntoShuffler();
@@ -146,8 +161,9 @@ class DeckLogic {
       for (int i = 0; i < compartments.length; i++)
         if (compartments[i].length < compartmentMaxCapacity) i
     ];
-    final candidates =
-        eligible.isNotEmpty ? eligible : List.generate(compartments.length, (i) => i);
+    final candidates = eligible.isNotEmpty
+        ? eligible
+        : List.generate(compartments.length, (i) => i);
     final chosen = candidates[random.nextInt(candidates.length)];
     compartments[chosen].add(card);
     SettingsGlobalValues.logger

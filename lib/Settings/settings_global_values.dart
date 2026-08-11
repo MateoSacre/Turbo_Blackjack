@@ -163,6 +163,17 @@ class SettingsGlobalValues {
     }
   }
 
+  static double getPileWidth(BuildContext context) {
+    switch(getScreenSize(context)){
+      case 0 :
+        return pileWidthSmall;
+      case 1 :
+        return pileWidthMedium;
+      default :
+        return pileWidthBig;
+    }
+  }
+
   static getFontSize(BuildContext context) {
     switch(getScreenSize(context)){
       case 0 :
@@ -224,6 +235,9 @@ class SettingsGlobalValues {
   static const double miniCardHeightSmall = 42;
   static const double miniCardHeightMedium = 64;
   static const double miniCardHeightBig = 100;
+  static const double pileWidthSmall = 26;
+  static const double pileWidthMedium = 38;
+  static const double pileWidthBig = 60;
   static const double bigIconSize = 75;
   static const double mediumIconSize = 50;
   static const double smallIconSize = 25;
